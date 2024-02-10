@@ -20,7 +20,7 @@ struct LogLocation {
     LogLocation(std::string filename_in, int line_in, std::string funcname_in)
         : filename(std::move(filename_in))
         , line(line_in)
-        , funcname(std::move(funcname_in)) { }
+        , funcname(std::move(funcname_in)) {}
 
     int         line { 0 };      ///< 行号
     std::string filename { "" }; ///< 文件名
@@ -57,7 +57,7 @@ struct LogInfo {
      * @param msg 日志内容
      */
     LogInfo(LogLocation loc, std::string_view name, LogLevel lvl, std::string_view msg)
-        : LogInfo(utils::TimePoint(), loc, name, lvl, msg) {
+        : LogInfo(utils::DateTime::now().timePoint(), loc, name, lvl, msg) {
     }
 
     /**

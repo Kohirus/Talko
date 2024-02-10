@@ -6,8 +6,7 @@
 #include <utils/file_info.h>
 #include <utils/os.h>
 
-namespace talko {
-namespace log {
+namespace talko::log {
 LogFormatter::FlagHash LogFormatter::hash_ = {
     { 'a', []() { return std::make_unique<ShortWeekdayFlag>(); } },
     { 'A', []() { return std::make_unique<WeekdayFlag>(); } },
@@ -56,6 +55,7 @@ static std::string short_weekday_strings[] = { "Sun", "Mon", "Tue", "Wed", "Thu"
 
 void ShortWeekdayFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(short_weekday_strings[datetime.weekday()]);
 }
 
@@ -63,6 +63,7 @@ static std::string weekday_strings[] = { "Sunday", "Monday", "Tuesday", "Wednesd
 
 void WeekdayFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(weekday_strings[datetime.weekday()]);
 }
 
@@ -70,6 +71,7 @@ static std::string short_month_strings[] = { "Jan", "Feb", "Mar", "Apr", "May", 
 
 void ShortMonthStringFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(short_month_strings[datetime.month() - 1]);
 }
 
@@ -77,11 +79,13 @@ static std::string month_strings[] = { "January", "February", "March", "April", 
 
 void MonthStringFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(month_strings[datetime.month() - 1]);
 }
 
 void StandardDateTimeFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(short_weekday_strings[datetime.weekday()]);
     buffer.push_back(' ');
     buffer.append(short_month_strings[datetime.month() - 1]);
@@ -103,6 +107,7 @@ void NameFlag::format(const LogInfo& info, std::string& buffer) {
 
 void ShortDateFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.month()));
     buffer.push_back('/');
     buffer.append(fmt::format("{:02d}", datetime.day()));
@@ -112,25 +117,29 @@ void ShortDateFlag::format(const LogInfo& info, std::string& buffer) {
 
 void DayFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.day()));
 }
 
 void MillisecondsFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:03d}", datetime.milliseconds()));
 }
 
 void ThreadIdFlag::format(const LogInfo& info, std::string& buffer) {
-    buffer.append(fmt::format("{:06d}", info.thread_id));
+    buffer.append(fmt::format("{}", info.thread_id));
 }
 
 void MicrosecondsFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:06d}", datetime.microseconds()));
 }
 
 void DateFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.year()));
     buffer.push_back('-');
     buffer.append(fmt::format("{:02d}", datetime.month()));
@@ -140,6 +149,7 @@ void DateFlag::format(const LogInfo& info, std::string& buffer) {
 
 void SecondsSinceEpochFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:010d}", datetime.secondsSinceEpoch()));
 }
 
@@ -150,11 +160,13 @@ void SourceFileNameFlag::format(const LogInfo& info, std::string& buffer) {
 
 void HourFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.hour()));
 }
 
 void Hour12Flag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.hour12()));
 }
 
@@ -169,6 +181,7 @@ void SourceFileLineFlag::format(const LogInfo& info, std::string& buffer) {
 
 void DayOfYearFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:03d}", datetime.dayOfYear()));
 }
 
@@ -214,11 +227,13 @@ void NewLineFlag::format(const LogInfo& info, std::string& buffer) {
 
 void NanosecondsFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:09d}", datetime.nanoseconds()));
 }
 
 void AmPmFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(datetime.isAm() ? "AM" : "PM");
 }
 
@@ -228,6 +243,7 @@ void ProcessIdFlag::format(const LogInfo& info, std::string& buffer) {
 
 void Time12Flag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.hour12()));
     buffer.push_back(':');
     buffer.append(fmt::format("{:02d}", datetime.minute()));
@@ -239,6 +255,7 @@ void Time12Flag::format(const LogInfo& info, std::string& buffer) {
 
 void HourAndMinuteFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.hour()));
     buffer.push_back(':');
     buffer.append(fmt::format("{:02d}", datetime.minute()));
@@ -246,6 +263,7 @@ void HourAndMinuteFlag::format(const LogInfo& info, std::string& buffer) {
 
 void SecondsFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.seconds()));
 }
 
@@ -255,6 +273,7 @@ void TabFlag::format(const LogInfo& info, std::string& buffer) {
 
 void TimeFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.hour()));
     buffer.push_back(':');
     buffer.append(fmt::format("{:02d}", datetime.minute()));
@@ -268,16 +287,19 @@ void LogMessageFlag::format(const LogInfo& info, std::string& buffer) {
 
 void ShortYearFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:02d}", datetime.year() % 100));
 }
 
 void YearFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(fmt::format("{:04d}", datetime.year()));
 }
 
 void ZoneFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
     buffer.append(datetime.zone());
 }
 
@@ -287,6 +309,7 @@ void PercentFlag::format(const LogInfo& info, std::string& buffer) {
 
 void DefaultFlag::format(const LogInfo& info, std::string& buffer) {
     utils::DateTime datetime(info.time_point);
+    if (use_utc_) datetime.toUtcTime();
 
     // 日期部分
     buffer.push_back('[');
@@ -303,6 +326,8 @@ void DefaultFlag::format(const LogInfo& info, std::string& buffer) {
     buffer.append(fmt::format("{:02d}", datetime.minute()));
     buffer.push_back(':');
     buffer.append(fmt::format("{:02d}", datetime.seconds()));
+    buffer.push_back('.');
+    buffer.append(fmt::format("{:02d}", datetime.milliseconds()));
     buffer.push_back(']');
     buffer.push_back(' ');
 
@@ -320,7 +345,7 @@ void DefaultFlag::format(const LogInfo& info, std::string& buffer) {
 
     // 线程号
     buffer.push_back('[');
-    buffer.append(fmt::format("{:06d}", info.thread_id));
+    buffer.append(fmt::format("{}", info.thread_id));
     buffer.push_back(']');
     buffer.push_back(' ');
 
@@ -336,13 +361,15 @@ void ContentFlag::append(char ch) {
     content_.push_back(ch);
 }
 
-LogFormatter::LogFormatter(std::string pattern)
-    : pattern_(std::move(pattern)) {
+LogFormatter::LogFormatter(std::string pattern, bool use_utc)
+    : pattern_(std::move(pattern))
+    , use_utc_(use_utc) {
     parse();
 }
 
 void LogFormatter::format(const LogInfo& info, std::string& buffer) {
     for (auto& f : flags_) {
+        f->enableUtcTime(use_utc_);
         f->format(info, buffer);
     }
 
@@ -369,6 +396,11 @@ void LogFormatter::removeFlag(char flag) {
     if (it != hash_.end()) {
         hash_.erase(it);
     }
+}
+
+std::unique_ptr<LogFormatter> LogFormatter::clone() {
+    auto cloned = std::make_unique<LogFormatter>(pattern_);
+    return cloned;
 }
 
 void LogFormatter::parse() {
@@ -403,5 +435,4 @@ void LogFormatter::handleFlag(char flag) {
     flags_.push_back(std::move(it->second()));
 }
 
-} // namespace log
-} // namespace talko
+} // namespace talko::log

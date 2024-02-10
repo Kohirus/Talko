@@ -19,6 +19,12 @@ public:
     AbstractFlag()          = default;
     virtual ~AbstractFlag() = default;
 
+    AbstractFlag(const AbstractFlag&)            = default;
+    AbstractFlag& operator=(const AbstractFlag&) = default;
+
+    AbstractFlag(AbstractFlag&&)            = default;
+    AbstractFlag& operator=(AbstractFlag&&) = default;
+
     /**
      * @brief 格式化文本内容
      *
@@ -26,6 +32,12 @@ public:
      * @param buffer 缓冲区
      */
     virtual void format(const LogInfo& info, std::string& buffer) = 0;
+
+    /** 开启UTC时间，为false时使用本地时间 */
+    inline void enableUtcTime(bool enable) { use_utc_ = enable; };
+
+protected:
+    bool use_utc_ { false }; ///< 是否使用UTC时间
 };
 
 /**
@@ -549,12 +561,19 @@ public:
 
     LogFormatter() = default;
 
+    LogFormatter(const LogFormatter& other)            = default;
+    LogFormatter& operator=(const LogFormatter& other) = default;
+
+    LogFormatter(LogFormatter&& other)      = default;
+    LogFormatter& operator=(LogFormatter&&) = default;
+
     /**
      * @brief Construct a new Log Formatter object
-     * 
+     *
      * @param pattern 模式串
+     * @param use_utc 是否使用UTC时间格式，默认为false
      */
-    explicit LogFormatter(std::string pattern);
+    explicit LogFormatter(std::string pattern, bool use_utc = false);
 
     /**
      * @brief 格式化日志信息到缓冲区中
@@ -569,7 +588,7 @@ public:
 
     /**
      * @brief 添加自定义格式化标志
-     * 
+     *
      * @param flag 格式化标志
      * @param fun 回调函数，返回指向父类的指针
      * @return 若映射表中没有该格式化标志则返回true，否则返回false
@@ -579,6 +598,9 @@ public:
     /** 移除格式化标志 */
     void removeFlag(char flag);
 
+    /** 复制对象 */
+    std::unique_ptr<LogFormatter> clone();
+
 private:
     /** 解析模式串 */
     void parse();
@@ -587,8 +609,9 @@ private:
     void handleFlag(char flag);
 
 private:
-    std::string  pattern_ { "%#" }; ///< 模式串
-    FlagSequence flags_ {};         ///< 格式化标志序列
+    std::string  pattern_ { "%#" };  ///< 模式串
+    FlagSequence flags_ {};          ///< 格式化标志序列
+    bool         use_utc_ { false }; ///< 使用UTC时间
 
     static FlagHash hash_; ///< 格式化映射表
 };
