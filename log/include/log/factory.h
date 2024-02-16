@@ -5,7 +5,7 @@
 
 namespace talko::log {
 /**
- * @brief 工厂
+ * @brief 日志器工厂
  *
  */
 struct Factory {

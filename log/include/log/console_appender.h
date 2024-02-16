@@ -1,7 +1,9 @@
 #pragma once
 
+#include <log/factory.h>
 #include <log/log_appender.h>
 #include <log/log_formatter.h>
+#include <unistd.h>
 #include <unordered_map>
 #include <utility>
 
@@ -61,15 +63,19 @@ using LevelFont = std::unordered_map<LogLevel, TerminalFont>;
  * @brief 终端输出器
  *
  * @tparam MutexType 互斥器类型
- * @tparam OutputStrategy 输出策略
  */
-template <typename MutexType, typename OutputStrategy>
+template <typename MutexType>
 class ConsoleAppender : public LogAppender {
 public:
-    ConsoleAppender()
-        : formatter_(new LogFormatter("%#")) {
+    ConsoleAppender(bool async = false)
+        : LogAppender(async)
+        , formatter_(std::make_unique<LogFormatter>("%#")) {
+        output_.setHandler(stdout);
     }
     ~ConsoleAppender() = default;
+
+    ConsoleAppender(const ConsoleAppender&)            = delete;
+    ConsoleAppender& operator=(const ConsoleAppender&) = delete;
 
     /** 输出日志 */
     void log(const LogInfo& info) override {
@@ -91,9 +97,9 @@ public:
             out_str.append(suffix);
         }
 
-        // 根据不同的输出策略输出日志
-        OutputStrategy os;
-        os.output(out_str);
+        // 输出日志
+        output_.output(out_str);
+        output_.flush();
     }
 
     /** 设置格式化串 */
@@ -142,8 +148,8 @@ private:
     static LevelFont propetry_;  ///< 终端字体属性映射表
 };
 
-template <typename MutexType, typename OutputStrategy>
-LevelFont ConsoleAppender<MutexType, OutputStrategy>::propetry_ = {
+template <typename MutexType>
+LevelFont ConsoleAppender<MutexType>::propetry_ = {
     { LogLevel::trace, TerminalFont {} },
     { LogLevel::debug, TerminalFont(Color::Blue) },
     { LogLevel::info, TerminalFont(Color::Green) },
@@ -153,33 +159,26 @@ LevelFont ConsoleAppender<MutexType, OutputStrategy>::propetry_ = {
     { LogLevel::off, TerminalFont {} },
 };
 
-template <typename OutputStrategy = SyncStrategy>
-using ConsoleAppenderSt = ConsoleAppender<FakeMutex, OutputStrategy>;
-
-template <typename OutputStrategy = SyncStrategy>
-using ConsoleAppenderMt = ConsoleAppender<RealMutex, OutputStrategy>;
+using ConsoleAppenderSt = ConsoleAppender<FakeMutex>;
+using ConsoleAppenderMt = ConsoleAppender<RealMutex>;
 
 /**
- * @brief 获取单线程控制台日志器
+ * @brief 获取单线程控制台同步日志器
  *
- * @tparam OutputStrategy 输出策略，默认为同步策略
  * @param logger_name 日志名称
  * @return std::shared_ptr<Logger> 返回控制台日志器
  */
-template <typename OutputStrategy = SyncStrategy>
-std::shared_ptr<Logger> createConsoleLoggerSt(const std::string& logger_name) {
-    return Factory::create<ConsoleAppenderSt<OutputStrategy>>(logger_name);
+inline std::shared_ptr<Logger> createConsoleLoggerSt(const std::string& logger_name) {
+    return Factory::create<ConsoleAppenderSt>(logger_name);
 }
 
 /**
- * @brief 获取多线程控制台日志器
+ * @brief 获取多线程控制台同步日志器
  *
- * @tparam OutputStrategy 输出策略，默认为同步策略
  * @param logger_name 日志名称
  * @return std::shared_ptr<Logger> 返回控制台日志器
  */
-template <typename OutputStrategy = SyncStrategy>
-std::shared_ptr<Logger> createConsoleLoggerMt(const std::string& logger_name) {
-    return Factory::create<ConsoleAppenderMt<OutputStrategy>>(logger_name);
+inline std::shared_ptr<Logger> createConsoleLoggerMt(const std::string& logger_name) {
+    return Factory::create<ConsoleAppenderMt>(logger_name);
 }
 } // namespace talko::log

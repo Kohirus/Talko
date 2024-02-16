@@ -4,3 +4,6 @@ add_test(NAME formatter_test COMMAND formatter_test)
 
 add_executable(console_test console_test.cc)
 target_link_libraries(console_test log)
+
+add_executable(file_test file_test.cc)
+target_link_libraries(file_test log)

@@ -21,8 +21,6 @@ using AppenderList     = std::vector<AppenderPtr>;
 using AppenderInitList = std::initializer_list<AppenderPtr>;
 using AtomicLevel      = std::atomic<LogLevel>;
 
-using ErrorHandler  = std::function<void(const std::string& err_msg)>;
-
 /**
  * @brief 虚假互斥锁
  * 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <log/log_info.h>
-#include <log/output_strategy.h>
+#include <log/log_output.h>
 #include <log/types.h>
-#include <log/factory.h>
+#include <pool/thread_pool.h>
 
 namespace talko::log {
 /**
@@ -12,7 +12,13 @@ namespace talko::log {
  */
 class LogAppender {
 public:
-    LogAppender()          = default;
+    /**
+     * @brief Construct a new Log Appender object
+     *
+     * @param async 是否为异步日志输出器
+     */
+    LogAppender(bool async = false);
+
     virtual ~LogAppender() = default;
 
     /** 输出日志信息 */
@@ -35,5 +41,6 @@ public:
 
 protected:
     AtomicLevel level_ { LogLevel::trace }; ///< 日志等级
+    LogOutput   output_;                    ///< 输出器
 };
 } // namespace talko::log

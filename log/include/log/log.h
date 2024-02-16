@@ -2,10 +2,11 @@
 
 #include <fmt/core.h>
 #include <log/console_appender.h>
+#include <log/file_appender.h>
 #include <log/log_formatter.h>
+#include <log/log_manager.h>
 #include <log/logger.h>
 #include <log/types.h>
-#include <log/log_manager.h>
 
 namespace talko::log {
 /** 获取指定名称的日志器 */

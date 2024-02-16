@@ -3,24 +3,23 @@
 #include <log/logger.h>
 
 namespace talko::log {
-Logger::Logger(const std::string& logger_name)
+Logger::Logger(std::string logger_name)
     : name_(std::move(logger_name)) {
 }
 
-Logger::Logger(const std::string& logger_name, AppenderPtr appender)
+Logger::Logger(std::string logger_name, AppenderPtr appender)
     : name_(std::move(logger_name))
     , appenders_({ appender }) {
 }
 
-Logger::Logger(const std::string& logger_name, AppenderInitList list)
+Logger::Logger(std::string logger_name, AppenderInitList list)
     : Logger(std::move(logger_name), list.begin(), list.end()) {
 }
 
 Logger::Logger(const Logger& other)
     : name_(other.name_)
     , appenders_(other.appenders_)
-    , level_(other.level_.load())
-    , err_handler_(other.err_handler_) {
+    , level_(other.level_.load()) {
 }
 
 Logger& Logger::operator=(const Logger& other) {
@@ -28,7 +27,6 @@ Logger& Logger::operator=(const Logger& other) {
         name_        = other.name_;
         appenders_   = other.appenders_;
         level_       = other.level_.load();
-        err_handler_ = other.err_handler_;
     }
     return *this;
 }
@@ -36,8 +34,7 @@ Logger& Logger::operator=(const Logger& other) {
 Logger::Logger(Logger&& other) noexcept
     : name_(std::move(other.name_))
     , appenders_(std::move(other.appenders_))
-    , level_(other.level_.load())
-    , err_handler_(std::move(other.err_handler_)) {
+    , level_(other.level_.load()) {
 }
 
 Logger& Logger::operator=(Logger&& other) noexcept {
@@ -51,7 +48,6 @@ void Logger::swap(Logger& other) noexcept {
     auto other_lvl = other.level_.load();
     auto my_lvl    = level_.exchange(other_lvl);
     other.level_.store(my_lvl);
-    err_handler_.swap(other.err_handler_);
 }
 
 void Logger::setPattern(std::string pattern, bool use_utc) {

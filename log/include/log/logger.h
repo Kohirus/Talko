@@ -18,7 +18,7 @@ public:
      *
      * @param logger_name 日志名称
      */
-    explicit Logger(const std::string& logger_name);
+    explicit Logger(std::string logger_name);
 
     /**
      * @brief Construct a new Logger object
@@ -29,7 +29,7 @@ public:
      * @param end 结束迭代器
      */
     template <typename It>
-    Logger(const std::string& logger_name, It begin, It end)
+    Logger(std::string logger_name, It begin, It end)
         : name_(std::move(logger_name))
         , appenders_(begin, end) { }
 
@@ -39,7 +39,7 @@ public:
      * @param logger_name 日志名称
      * @param appender 日志输出器
      */
-    Logger(const std::string& logger_name, AppenderPtr appender);
+    Logger(std::string logger_name, AppenderPtr appender);
 
     /**
      * @brief Construct a new Logger object
@@ -47,7 +47,7 @@ public:
      * @param logger_name 日志名称
      * @param list 日志输出器列表
      */
-    Logger(const std::string& logger_name, AppenderInitList list);
+    Logger(std::string logger_name, AppenderInitList list);
 
     ~Logger() = default;
 
@@ -292,14 +292,21 @@ public:
         log(LogLevel::fatal, msg);
     }
 
-private:
+protected:
     /** 输出日志消息 */
     void log_(const LogInfo& info);
 
-private:
+protected:
     std::string  name_ { "" };              ///< 日志名称
     AppenderList appenders_ {};             ///< 日志输出器
     AtomicLevel  level_ { LogLevel::info }; ///< 日志等级
-    ErrorHandler err_handler_ {};           ///< 错误消息句柄
+};
+
+/**
+ * @brief 异步日志器
+ * 
+ */
+class AsyncLogger final : public Logger {
+private:
 };
 } // namespace talko::log

@@ -2,6 +2,10 @@
 #include <log/log_formatter.h>
 
 namespace talko::log {
+LogAppender::LogAppender(bool async)
+    : output_(nullptr, async) {
+}
+
 void LogAppender::setLevel(LogLevel lvl) {
     level_.store(lvl);
 }

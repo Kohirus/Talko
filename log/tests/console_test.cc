@@ -28,6 +28,7 @@ void mulitiThreadTest() {
 void singleThreadTest() {
     auto logger = log::createConsoleLoggerSt("default");
     logger->setLevel(log::LogLevel::trace);
+    logger->setPattern("[%c] [%C] [%l] [%k] %v");
     log::setDefaultLogger(logger);
     int a = 10, b = 20;
     LOG_TRACE("trace log: {}, {}", a, b);
@@ -40,10 +41,14 @@ void singleThreadTest() {
 
 /** 颜色更改测试 */
 void colorTest() {
+    log::TerminalFont font(log::Color::Green, log::Color::Default, true, true, true);
+    log::ConsoleAppender<log::RealMutex>::setLevelFont(log::LogLevel::info, font);
+    log::info("info log...");
 }
 
 int main() {
     // mulitiThreadTest();
     singleThreadTest();
+    // colorTest();
     return 0;
 }

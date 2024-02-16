@@ -12,7 +12,7 @@ LogManager& LogManager::instance() {
 
 LogManager::LogManager()
     : formatter_(new LogFormatter("%#")) {
-    auto cs_appender    = std::make_shared<ConsoleAppenderMt<SyncStrategy>>();
+    auto cs_appender    = std::make_shared<ConsoleAppenderMt>();
     default_logger_     = std::make_shared<Logger>("default", std::move(cs_appender));
     loggers_["default"] = default_logger_;
 }
