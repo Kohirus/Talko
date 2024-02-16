@@ -3,8 +3,7 @@
 #include <string>
 #include <utils/datetime.h>
 
-namespace talko {
-namespace utils {
+namespace talko::utils {
 /** 文件相关的时间类型 */
 enum class FileTime {
     access, ///< 最后访问时间
@@ -79,10 +78,9 @@ public:
     size_t size() const;
 
     /** 获取文件相关的时间 */
-    DateTime fileTime(FileTime time) const;
+    std::optional<DateTime> fileTime(FileTime time) const;
 
 private:
     std::string filename_; ///< 文件名
 };
-} // namespace utils
-} // namespace talko
+} // namespace talko::utils

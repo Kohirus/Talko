@@ -4,8 +4,7 @@
 #include <unistd.h>
 #include <utils/file_info.h>
 
-namespace talko {
-namespace utils {
+namespace talko::utils {
 FileInfo::FileInfo(std::string filename)
     : filename_(std::move(filename)) {
 }
@@ -155,7 +154,7 @@ size_t FileInfo::size() const {
     return st.st_size;
 }
 
-DateTime FileInfo::fileTime(FileTime time) const {
+std::optional<DateTime> FileInfo::fileTime(FileTime time) const {
     struct stat st;
 
     if (::stat(filename_.c_str(), &st) != 0) {
@@ -175,5 +174,4 @@ DateTime FileInfo::fileTime(FileTime time) const {
 
     return DateTime::invalid();
 }
-} // namespace utils
-} // namespace talko
+} // namespace talko::utils

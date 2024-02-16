@@ -2,11 +2,10 @@
 
 #include <chrono>
 #include <ctime>
+#include <optional>
 #include <string>
 
-namespace talko {
-namespace utils {
-
+namespace talko::utils {
 using TimePoint = std::chrono::system_clock::time_point;
 
 /**
@@ -19,17 +18,15 @@ public:
      * @brief Construct a new Date Time object
      *
      * @param time_point 时间点
-     * @param valid 时间是否有效，默认为true
      */
-    DateTime(TimePoint time_point, bool valid = true);
+    DateTime(TimePoint time_point);
 
     /**
      * @brief Construct a new Date Time object
      *
      * @param ctime C-Style时间戳
-     * @param valid 时间是否有效，默认为true
      */
-    DateTime(std::time_t ctime, bool valid = true);
+    DateTime(std::time_t ctime);
 
     DateTime(const DateTime&)            = default;
     DateTime& operator=(const DateTime&) = default;
@@ -40,13 +37,10 @@ public:
     static DateTime now();
 
     /** 返回无效时间 */
-    static DateTime invalid();
+    static std::optional<DateTime> invalid();
 
     /** 获取时间点 */
     inline TimePoint timePoint() const { return time_point_; }
-
-    /** 时间是否有效 */
-    inline bool isValid() const { return valid_; }
 
     /** 获取自纪元时间以来的秒数 */
     long secondsSinceEpoch() const;
@@ -115,7 +109,5 @@ private:
 private:
     TimePoint time_point_; ///< 时间点
     bool      local_time_; ///< 是否使用本地时间
-    bool      valid_;      ///< 时间是否有效
 };
-} // namespace utils
-} // namespace talko
+} // namespace talko::utils
