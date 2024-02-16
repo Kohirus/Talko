@@ -1,9 +1,9 @@
 #include <cassert>
+#include <filesystem>
 #include <fmt/core.h>
 #include <log/log_formatter.h>
 #include <typeinfo>
 #include <utils/datetime.h>
-#include <utils/file_info.h>
 #include <utils/os.h>
 
 namespace talko::log {
@@ -154,8 +154,8 @@ void SecondsSinceEpochFlag::format(const LogInfo& info, std::string& buffer) {
 }
 
 void SourceFileNameFlag::format(const LogInfo& info, std::string& buffer) {
-    utils::FileInfo fileinfo(info.location.filename);
-    buffer.append(fileinfo.fileName());
+    std::filesystem::path file_path = info.location.filename;
+    buffer.append(file_path.filename().string());
 }
 
 void HourFlag::format(const LogInfo& info, std::string& buffer) {
@@ -171,8 +171,8 @@ void Hour12Flag::format(const LogInfo& info, std::string& buffer) {
 }
 
 void SourceFilePathFlag::format(const LogInfo& info, std::string& buffer) {
-    utils::FileInfo fileinfo(info.location.filename);
-    buffer.append(fileinfo.absoulteFilePath());
+    std::filesystem::path file_path = info.location.filename;
+    buffer.append(std::filesystem::absolute(file_path).string());
 }
 
 void SourceFileLineFlag::format(const LogInfo& info, std::string& buffer) {
@@ -190,15 +190,15 @@ void SourceFileFuncNameFlag::format(const LogInfo& info, std::string& buffer) {
 }
 
 void SourceFileLocationFlag::format(const LogInfo& info, std::string& buffer) {
-    utils::FileInfo fileinfo(info.location.filename);
-    buffer.append(fileinfo.fileName());
+    std::filesystem::path file_path = info.location.filename;
+    buffer.append(file_path.filename().string());
     buffer.push_back(':');
     buffer.append(fmt::format("{}", info.location.line));
 }
 
 void FullSourceFileLocationFlag::format(const LogInfo& info, std::string& buffer) {
-    utils::FileInfo fileinfo(info.location.filename);
-    buffer.append(fileinfo.absoulteFilePath());
+    std::filesystem::path file_path = info.location.filename;
+    buffer.append(std::filesystem::absolute(file_path).string());
     buffer.push_back(':');
     buffer.append(fmt::format("{}", info.location.line));
 }
