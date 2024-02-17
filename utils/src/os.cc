@@ -1,5 +1,7 @@
+#include <chrono>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <thread>
 #include <unistd.h>
 #include <utils/os.h>
 
@@ -12,5 +14,21 @@ long threadId() {
 int processId() {
     static pid_t pid = ::getpid();
     return pid;
+}
+
+void sleepForSeconds(size_t sec) {
+    std::this_thread::sleep_for(std::chrono::seconds(sec));
+}
+
+void sleepForMilliseconds(size_t milli) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(milli));
+}
+
+void sleepForMicroseconds(size_t micro) {
+    std::this_thread::sleep_for(std::chrono::microseconds(micro));
+}
+
+void sleepForNanoseconds(size_t nano) {
+    std::this_thread::sleep_for(std::chrono::nanoseconds(nano));
 }
 } // namespace talko::utils::os

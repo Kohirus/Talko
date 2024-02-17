@@ -22,17 +22,18 @@ public:
      * @param rewrite 是否重写文件
      * @param async 是否异步输出
      */
-    FileAppender(std::string filename, bool rewrite = false, bool async = false)
+    FileAppender(const std::string& filename, bool rewrite = false, bool async = false)
         : LogAppender(async)
         , formatter_(std::make_unique<LogFormatter>("%#"))
-        , filename_(std::move(filename))
+        , filename_(filename)
         , mode_(rewrite ? "w" : "a") {
+        assert(!filename_.empty() && "Filename is empty.");
         openLogFile();
     }
 
-    ~FileAppender() {
-    }
+    ~FileAppender() = default;
 
+    /** 输出日志 */
     void log(const LogInfo& info) override {
         std::lock_guard<MutexType> lock(mtx_);
 
@@ -92,7 +93,7 @@ private:
 
         // 打开文件 文件不存在则创建文件
         FILE* file = ::fopen(filename_.c_str(), mode_.c_str());
-        err_msg    = "Failed to create file: '" + filename_ + "'.";
+        err_msg    = "Failed to open file: '" + filename_ + "'.";
         assert(file != nullptr && err_msg.c_str());
         output_.setHandler(file);
     }

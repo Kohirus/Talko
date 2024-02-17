@@ -6,6 +6,7 @@
 #include <log/log_formatter.h>
 #include <log/log_manager.h>
 #include <log/logger.h>
+#include <log/rotating_file_appender.h>
 #include <log/types.h>
 
 namespace talko::log {

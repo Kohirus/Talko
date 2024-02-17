@@ -45,6 +45,9 @@ void LogOutput::swap(LogOutput& other) noexcept {
 }
 
 void LogOutput::setHandler(FILE* handler) {
+    if (handler_ != nullptr) {
+        ::fclose(handler_); // 关闭先前的文件流
+    }
     handler_ = handler;
 }
 

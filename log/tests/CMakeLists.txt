@@ -7,3 +7,6 @@ target_link_libraries(console_test log)
 
 add_executable(file_test file_test.cc)
 target_link_libraries(file_test log)
+
+add_executable(rotating_file_test rotating_file_test.cc)
+target_link_libraries(rotating_file_test log)
