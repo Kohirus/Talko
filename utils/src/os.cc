@@ -1,4 +1,6 @@
+#include <cerrno>
 #include <chrono>
+#include <cstring>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <thread>

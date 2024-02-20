@@ -46,9 +46,20 @@ void colorTest() {
     log::info("info log...");
 }
 
+void registerLogger() {
+    auto logger = log::createConsoleLoggerSt("test");
+    logger->setLevel(log::LogLevel::debug);
+    log::registerLogger(logger);
+    std::cout << "Exist: " << log::exist("test") << std::endl;
+    log::get("test")->debug("debug info");
+    log::get("test")->info("info log");
+    LOGGER_ERROR("test", "error log");
+}
+
 int main() {
     // mulitiThreadTest();
     singleThreadTest();
     // colorTest();
+    // registerLogger();
     return 0;
 }

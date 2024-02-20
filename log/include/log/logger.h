@@ -301,12 +301,4 @@ protected:
     AppenderList appenders_ {};             ///< 日志输出器
     AtomicLevel  level_ { LogLevel::info }; ///< 日志等级
 };
-
-/**
- * @brief 异步日志器
- * 
- */
-class AsyncLogger final : public Logger {
-private:
-};
 } // namespace talko::log

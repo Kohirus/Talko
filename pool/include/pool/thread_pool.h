@@ -50,6 +50,12 @@ public:
     /** 设置动态模式下的最大线程数量 */
     void setMaxThreadSize(size_t max_size);
 
+    /** 获取空闲线程数量 */
+    size_t idleThreadSize() const;
+
+    /** 获取当前的线程池模式 */
+    ThreadPoolMode mode() const;
+
     /**
      * @brief 提交任务
      *
@@ -128,6 +134,12 @@ void start(size_t thread_num = std::thread::hardware_concurrency());
 
 /** 停止线程池 */
 void stop();
+
+/** 获取空闲线程数量 */
+size_t idleThreadSize();
+
+/** 获取当前的线程池模式 */
+ThreadPoolMode mode();
 
 /** 线程池是否正在运行 */
 bool isRunning();

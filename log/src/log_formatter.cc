@@ -18,7 +18,7 @@ LogFormatter::FlagHash LogFormatter::hash_ = {
     { 'D', []() { return std::make_unique<DayFlag>(); } },
     { 'e', []() { return std::make_unique<MillisecondsFlag>(); } },
     { 'E', []() { return std::make_unique<ThreadIdFlag>(); } },
-    { 'f', []() { return std::make_unique<MillisecondsFlag>(); } },
+    { 'f', []() { return std::make_unique<MicrosecondsFlag>(); } },
     { 'F', []() { return std::make_unique<DateFlag>(); } },
     { 'g', []() { return std::make_unique<SecondsSinceEpochFlag>(); } },
     { 'G', []() { return std::make_unique<SourceFileNameFlag>(); } },

@@ -30,8 +30,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fPIC")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-
-
 add_subdirectory(utils)
 add_subdirectory(pool)
 add_subdirectory(log)
+add_subdirectory(net)

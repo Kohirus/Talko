@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 namespace talko::utils::os {
 /** 获取线程号 */

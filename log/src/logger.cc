@@ -24,9 +24,9 @@ Logger::Logger(const Logger& other)
 
 Logger& Logger::operator=(const Logger& other) {
     if (this != &other) {
-        name_        = other.name_;
-        appenders_   = other.appenders_;
-        level_       = other.level_.load();
+        name_      = other.name_;
+        appenders_ = other.appenders_;
+        level_     = other.level_.load();
     }
     return *this;
 }
@@ -101,6 +101,9 @@ void Logger::log_(const LogInfo& info) {
         if (appender->shouldLog(info.level)) {
             appender->log(info);
         }
+    }
+    if (info.level == LogLevel::fatal) {
+        ::exit(-1);
     }
 }
 

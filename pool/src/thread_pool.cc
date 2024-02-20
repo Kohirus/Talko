@@ -57,6 +57,14 @@ void ThreadPool::setMaxThreadSize(size_t max_size) {
     max_thread_size_ = max_size;
 }
 
+size_t ThreadPool::idleThreadSize() const {
+    return idle_thread_size_;
+}
+
+ThreadPoolMode ThreadPool::mode() const {
+    return mode_;
+}
+
 void ThreadPool::handleTaskQueue(size_t thread_id) {
     auto last_time = std::chrono::high_resolution_clock().now();
 
@@ -166,6 +174,14 @@ void start(size_t thread_num) {
 
 void stop() {
     ThreadPool::instance().stop();
+}
+
+size_t idleThreadSize() {
+    return ThreadPool::instance().idleThreadSize();
+}
+
+ThreadPoolMode mode() {
+    return ThreadPool::instance().mode();
 }
 
 bool isRunning() {

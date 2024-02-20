@@ -21,7 +21,7 @@ bool LogManager::registerLogger(LoggerPtr logger) {
     std::lock_guard<std::mutex> lock(map_mtx_);
 
     auto it = loggers_.find(logger->name());
-    if (it == loggers_.end()) {
+    if (it != loggers_.end()) {
         return false;
     }
 
