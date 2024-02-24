@@ -5,11 +5,13 @@
 #include <memory>
 #include <mutex>
 #include <net/callbacks.h>
+#include <net/timer_id.h>
 #include <vector>
 
 namespace talko::net {
 class EpollPoller;
 class Channel;
+class TimerQueue;
 
 /**
  * @brief 事件循环
@@ -48,6 +50,18 @@ public:
 
     /** 返回待处理事件队列的大小 */
     size_t queueSize();
+
+    /** 在指定时间点执行任务 */
+    TimerId runAt(TimePoint time, TimerCallback cb);
+
+    /** 在指定的延迟毫秒数后执行任务 */
+    TimerId runAfter(Duration delay, TimerCallback cb);
+
+    /** 每间隔指定的毫秒数执行一次任务 */
+    TimerId runEvery(Duration interval, TimerCallback cb);
+
+    /** 取消指定的定时器 */
+    void cancel(TimerId timer_id);
 
     /** 更新通道事件 */
     void updateChannel(Channel* channel);
@@ -88,6 +102,7 @@ private:
 
     std::unique_ptr<EpollPoller> poller_;         ///< I/O复用模型
     std::unique_ptr<Channel>     wakeup_channel_; ///< 唤醒通道
+    std::unique_ptr<TimerQueue>  timer_queue_;    ///< 定时器序列
     std::mutex                   mtx_;            ///< 保护待处理事件队列的线程安全
 
     ChannelList active_channels_;                ///< 活动事件列表

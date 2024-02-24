@@ -117,49 +117,65 @@ DateTime& DateTime::toUtcTime() {
     return *this;
 }
 
-std::string DateTime::toDateString() const {
+std::string DateTime::toString(StringType type) const {
     std::stringstream ss;
+    std::tm*          ctime = getTm();
 
-    std::tm* ctime = getTm();
-    ss << std::setw(4) << std::setfill('0') << ctime->tm_year + 1900;
-    ss << "-";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_mon + 1;
-    ss << "-";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_mday;
+    auto appendDate = [&]() {
+        ss << std::setw(4) << std::setfill('0') << ctime->tm_year + 1900;
+        ss << "-";
+        ss << std::setw(2) << std::setfill('0') << ctime->tm_mon + 1;
+        ss << "-";
+        ss << std::setw(2) << std::setfill('0') << ctime->tm_mday;
+    };
 
-    return ss.str();
-}
+    auto appendTime = [&]() {
+        ss << std::setw(2) << std::setfill('0') << ctime->tm_hour;
+        ss << ":";
+        ss << std::setw(2) << std::setfill('0') << ctime->tm_min;
+        ss << ":";
+        ss << std::setw(2) << std::setfill('0') << ctime->tm_sec;
+    };
 
-std::string DateTime::toTimeString() const {
-    std::stringstream ss;
-
-    std::tm* ctime = getTm();
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_hour;
-    ss << ":";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_min;
-    ss << ":";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_sec;
-
-    return ss.str();
-}
-
-std::string DateTime::toString() const {
-    std::stringstream ss;
-
-    std::tm* ctime = getTm();
-    ss << std::setw(4) << std::setfill('0') << ctime->tm_year + 1900;
-    ss << "-";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_mon + 1;
-    ss << "-";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_mday;
+    switch (type) {
+    case StringType::Date:
+        appendDate();
+        break;
+    case StringType::Time:
+        appendTime();
+        break;
+    case StringType::DateTime:
+        appendDate();
+        ss << " ";
+        appendTime();
+        break;
+    case StringType::DateTimeMilli:
+        appendDate();
+        ss << " ";
+        appendTime();
+        ss << "." << std::to_string(milliseconds());
+        break;
+    case StringType::DateTimeMicro:
+        appendDate();
+        ss << " ";
+        ss << "." << std::to_string(microseconds());
+        appendTime();
+        break;
+    case StringType::DateTimeNano:
+        appendDate();
+        ss << " ";
+        appendTime();
+        ss << "." << std::to_string(nanoseconds());
+        break;
+    }
     ss << " ";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_hour;
-    ss << ":";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_min;
-    ss << ":";
-    ss << std::setw(2) << std::setfill('0') << ctime->tm_sec;
 
     return ss.str();
+}
+
+std::string DateTime::toString(TimePoint time, StringType type) {
+    DateTime dt(time);
+    return dt.toString(type);
 }
 
 std::tm* DateTime::getTm() const {

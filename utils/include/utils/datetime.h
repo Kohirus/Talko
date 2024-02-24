@@ -6,7 +6,17 @@
 #include <string>
 
 namespace talko::utils {
-using TimePoint = std::chrono::system_clock::time_point;
+using TimePoint = std::chrono::high_resolution_clock::time_point;
+
+/** 时间字符串类型 */
+enum class StringType {
+    Date,          ///< 仅日期
+    Time,          ///< 仅时间
+    DateTime,      ///< 日期时间
+    DateTimeMilli, ///< 日期时间.毫秒
+    DateTimeMicro, ///< 日期时间.微秒
+    DateTimeNano   ///< 日期时间.纳秒
+};
 
 /**
  * @brief 时间日期类，默认采用本地时间
@@ -93,14 +103,11 @@ public:
     /** 转化为UTC时间 */
     DateTime& toUtcTime();
 
-    /** 转换为日期字符串 */
-    std::string toDateString() const;
-
-    /** 转换为时间字符串 */
-    std::string toTimeString() const;
-
     /** 转换为字符串形式 */
-    std::string toString() const;
+    std::string toString(StringType type = StringType::DateTime) const;
+
+    /** 将时间点转换为日期时间的字符串形式 */
+    static std::string toString(TimePoint time, StringType type = StringType::DateTime);
 
 private:
     /** 获取std::tm对象 */

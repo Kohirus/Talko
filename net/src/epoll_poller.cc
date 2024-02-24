@@ -24,7 +24,6 @@ EpollPoller::EpollPoller(EventLoop* loop)
     : owner_loop_(loop)
     , ep_fd_(common::createEpoll())
     , events_(kInitEventListSize) {
-    LOG_TRACE("Create epoll fd {}", ep_fd_);
 }
 
 EpollPoller::~EpollPoller() {

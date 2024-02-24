@@ -8,7 +8,10 @@ namespace talko::net {
 class TcpConnection;
 class ByteBuffer;
 
-using TimePoint             = std::chrono::high_resolution_clock::time_point;
+using TimePoint = std::chrono::high_resolution_clock::time_point;
+using Duration  = std::chrono::duration<int, std::milli>;
+
+using TimerCallback         = std::function<void()>;
 using TcpConnectionPtr      = std::shared_ptr<TcpConnection>;
 using ConnectionCallback    = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback         = std::function<void(const TcpConnectionPtr&)>;

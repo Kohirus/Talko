@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <cassert>
 #include <endian.h>
+#include <net/callbacks.h>
 #include <optional>
 #include <string>
 
@@ -65,6 +66,25 @@ int createNonblockingSocket(sa_family_t family);
 /** 创建通知事件文件描述符 */
 int createEventFd();
 
+/** 创建定时器文件描述符 */
+int createTimerFd();
+
+/**
+ * @brief 重置定时器超时时刻
+ * 
+ * @param timer_fd 定时器文件描述符
+ * @param expiration 定时器超时时刻
+ */
+void resetTimerFd(int timer_fd, TimePoint expiration);
+
+/**
+ * @brief 读取定时器文件描述符
+ * 
+ * @param timer_fd 定时器文件描述符
+ * @param now 当前时间点
+ */
+void readTimerFd(int timer_fd, TimePoint now);
+
 /** 创建epoll模型 */
 int createEpoll();
 
@@ -112,7 +132,7 @@ ssize_t read(int sockfd, void* buf, size_t count);
 
 /**
  * @brief 分散读取套接字上的数据
- * 
+ *
  * @param sockfd 套接字描述符
  * @param iov 多缓冲区结构体
  * @param iovcnt 缓冲区数目

@@ -3,13 +3,15 @@
 #include <net/common.h>
 #include <net/epoll_poller.h>
 #include <net/event_loop.h>
+#include <net/timer_queue.h>
 
 namespace talko::net {
 EventLoop::EventLoop()
     : poller_(std::make_unique<EpollPoller>(this))
     , thread_id_(utils::os::threadId())
     , wakeup_fd_(common::createEventFd())
-    , wakeup_channel_(std::make_unique<Channel>(this, wakeup_fd_)) {
+    , wakeup_channel_(std::make_unique<Channel>(this, wakeup_fd_))
+    , timer_queue_(std::make_unique<TimerQueue>(this)) {
     LOG_DEBUG("Create EventLoop[{}]", fmt::ptr(this));
     // 让唤醒事件描述符监听可读事件
     wakeup_channel_->setReadCallback(std::bind(&EventLoop::handleReadToWakeUp, this));
@@ -90,6 +92,24 @@ void EventLoop::queueInLoop(Functor cb) {
 size_t EventLoop::queueSize() {
     std::lock_guard<std::mutex> lock(mtx_);
     return pending_functors_.size();
+}
+
+TimerId EventLoop::runAt(TimePoint time, TimerCallback cb) {
+    return timer_queue_->append(std::move(cb), time, Duration(0));
+}
+
+TimerId EventLoop::runAfter(Duration delay, TimerCallback cb) {
+    TimePoint time = std::chrono::high_resolution_clock::now() + delay;
+    return runAt(time, std::move(cb));
+}
+
+TimerId EventLoop::runEvery(Duration interval, TimerCallback cb) {
+    TimePoint time = std::chrono::high_resolution_clock::now() + interval;
+    return timer_queue_->append(std::move(cb), time, interval);
+}
+
+void EventLoop::cancel(TimerId timer_id) {
+    timer_queue_->cancel(timer_id);
 }
 
 void EventLoop::updateChannel(Channel* channel) {

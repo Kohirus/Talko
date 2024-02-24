@@ -2,9 +2,11 @@
 #include <net/common.h>
 #include <poll.h>
 #include <sys/epoll.h>
+#include <sys/eventfd.h>
+#include <sys/timerfd.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#include <sys/eventfd.h>
+#include <utils/datetime.h>
 
 namespace talko::net::common {
 void setSocketAddr(sockaddr_in& addr, std::string_view ip, uint16_t port) {
@@ -71,6 +73,7 @@ int createNonblockingSocket(sa_family_t family) {
     if (sockfd < 0) {
         LOG_FATAL("Failed to create socket: {}", std::strerror(errno));
     }
+    LOG_TRACE("Create socket fd {}", sockfd);
     return sockfd;
 }
 
@@ -79,7 +82,50 @@ int createEventFd() {
     if (evt_fd < 0) {
         LOG_FATAL("Failed to create eventfd: {}", std::strerror(errno));
     }
+    LOG_TRACE("Create event fd {}", evt_fd);
     return evt_fd;
+}
+
+int createTimerFd() {
+    int timer_fd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+    if (timer_fd < 0) {
+        LOG_FATAL("Failed to create timerfd: {}", std::strerror(errno));
+    }
+    LOG_TRACE("Create timer fd {}", timer_fd);
+    return timer_fd;
+}
+
+void resetTimerFd(int timer_fd, TimePoint expiration) {
+    itimerspec new_val, old_val;
+    ::bzero(&new_val, sizeof(new_val));
+    ::bzero(&old_val, sizeof(old_val));
+
+    using std::chrono::duration_cast;
+    using std::chrono::nanoseconds;
+    using std::chrono::seconds;
+    using std::chrono::high_resolution_clock;
+
+    std::timespec ts;
+    TimePoint     now = high_resolution_clock::now();
+
+    ts.tv_sec  = duration_cast<seconds>(expiration - now).count();
+    ts.tv_nsec = duration_cast<nanoseconds>(expiration - now).count() % 1000000000;
+    // 触发过快时 expiration会小于now产生负数
+    if (ts.tv_sec < 0) ts.tv_sec = 0;
+    if (ts.tv_nsec < 0) ts.tv_nsec = 100;
+
+    new_val.it_value = ts;
+
+    int ret = ::timerfd_settime(timer_fd, 0, &new_val, &old_val);
+    if (ret) {
+        LOG_FATAL("Failed to set timerfd {}: {}", timer_fd, std::strerror(errno));
+    }
+}
+
+void readTimerFd(int timer_fd, TimePoint now) {
+    uint64_t howmany;
+    ::read(timer_fd, &howmany, sizeof(howmany));
+    LOG_TRACE("Read {} bytes from timerfd {}", howmany, timer_fd);
 }
 
 int createEpoll() {
@@ -87,6 +133,7 @@ int createEpoll() {
     if (epfd < 0) {
         LOG_FATAL("Failed to create epoll: {}", std::strerror(errno));
     }
+    LOG_TRACE("Create epoll fd {}", epfd);
     return epfd;
 }
 
