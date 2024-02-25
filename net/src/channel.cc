@@ -130,7 +130,7 @@ void Channel::update() {
 
 void Channel::handleEvent_(TimePoint receive_time) {
     event_handling_ = true;
-    LOG_TRACE("Resultant events: {}", common::eventsToString(revents_));
+    LOGGER_TRACE("net", "Resultant events: {}", common::eventsToString(revents_));
 
     // 发生套接字挂起事件 即远端关闭连接或主动关闭套接字
     if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {

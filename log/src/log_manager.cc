@@ -88,6 +88,10 @@ void LogManager::setFormatter(FormatterPtr formatter) {
 }
 
 void LogManager::setGlobalLevel(LogLevel lvl) {
+    std::lock_guard<std::mutex> lock(map_mtx_);
+    for (auto& logger : loggers_) {
+        logger.second->setLevel(lvl);
+    }
     global_level_.store(lvl);
 }
 

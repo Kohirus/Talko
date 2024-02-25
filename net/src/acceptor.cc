@@ -41,7 +41,7 @@ void Acceptor::handleRead() {
 
     int connfd = accept_socket_.accept(peer_addr);
     if (connfd >= 0) {
-        LOG_TRACE("Accept new client {} on fd {}", peer_addr.toIpPort(), connfd);
+        LOGGER_TRACE("net", "Accept new client {} on fd {}", peer_addr.toIpPort(), connfd);
         if (new_connection_cb_) {
             new_connection_cb_(connfd, peer_addr);
         } else {

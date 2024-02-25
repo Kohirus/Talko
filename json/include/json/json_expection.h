@@ -3,7 +3,7 @@
 #include <exception>
 #include <string>
 
-namespace talko::config {
+namespace talko::json {
 
 class JsonParseException : public std::exception {
 public:
@@ -17,4 +17,4 @@ public:
 private:
     std::string message;
 };
-} // namespace talko::config
+} // namespace talko::json

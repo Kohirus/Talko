@@ -9,13 +9,13 @@ Timer::Timer(uint64_t sequence, TimerCallback cb, TimePoint when, Duration inter
     , expiration_(when)
     , interval_(interval)
     , repeat_(interval.count() > 0) {
-    LOG_TRACE("Create new Timer[{}], Sequence: {}, Expiration: {}, Interval: {} ms",
+    LOGGER_TRACE("net", "Create new Timer[{}], Sequence: {}, Expiration: {}, Interval: {} ms",
         fmt::ptr(this), sequence_, utils::DateTime::toString(when, utils::StringType::DateTimeMilli),
         interval.count());
 }
 
 Timer::~Timer() {
-    LOG_TRACE("Destory Timer[{}]", fmt::ptr(this));
+    LOGGER_TRACE("net", "Destory Timer[{}]", fmt::ptr(this));
 }
 
 void Timer::run() const {

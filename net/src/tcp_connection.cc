@@ -21,12 +21,12 @@ TcpConnection::TcpConnection(EventLoop* loop, const std::string& name, int sockf
     channel_->setCloseCallback(std::bind(&TcpConnection::handleClose, this));
     channel_->setErrorCallback(std::bind(&TcpConnection::handleError, this));
 
-    LOG_DEBUG("Create TcpConnection {} at {}, fd: {}", name_, fmt::ptr(this), sockfd);
+    LOGGER_DEBUG("net", "Create TcpConnection {} at {}, fd: {}", name_, fmt::ptr(this), sockfd);
     socket_->enableKeepAlive();
 }
 
 TcpConnection::~TcpConnection() {
-    LOG_DEBUG("Destory TcpConnection {} at {}, fd: {}, state: {}", name_,
+    LOGGER_DEBUG("net", "Destory TcpConnection {} at {}, fd: {}, state: {}", name_,
         fmt::ptr(this), channel_->fd(), toString(state_));
     assert(state_ == State::Disconnected);
 }
@@ -165,7 +165,7 @@ void TcpConnection::handleRead(TimePoint receive_time) {
     } else if (n == 0) {
         handleClose();
     } else {
-        LOG_ERROR("Handle read event error on {}: {}", name_, std::strerror(saved_errno));
+        LOGGER_ERROR("net", "Handle read event error on {}: {}", name_, std::strerror(saved_errno));
         handleError();
     }
 }
@@ -191,14 +191,14 @@ void TcpConnection::handleWrite() {
                 }
             }
         } else { // 写入失败
-            LOG_ERROR("Handle write event error on {}: {}", name_, strerror(saved_errno));
+            LOGGER_ERROR("net", "Handle write event error on {}: {}", name_, strerror(saved_errno));
         }
     }
 }
 
 void TcpConnection::handleClose() {
     loop_->checkIsInCreatorThread();
-    LOG_TRACE("Handle close event on fd {}, state: {}", channel_->fd(), toString(state_));
+    LOGGER_TRACE("net", "Handle close event on fd {}, state: {}", channel_->fd(), toString(state_));
     assert(state_ == State::Connected || state_ == State::Disconnecting);
     state_ = State::Disconnected;
     channel_->disableAll();
@@ -210,7 +210,7 @@ void TcpConnection::handleClose() {
 
 void TcpConnection::handleError() {
     int err = common::getSocketError(channel_->fd());
-    LOG_ERROR("Handle error from {}: {}", name_, std::strerror(err));
+    LOGGER_ERROR("net", "Handle error from {}: {}", name_, std::strerror(err));
 }
 
 void TcpConnection::send_(std::string_view message) {
@@ -235,7 +235,7 @@ void TcpConnection::send_(std::string_view message) {
         } else { // 写入错误
             nwrote = 0;
             if (errno != EWOULDBLOCK) {
-                LOG_ERROR("Failed to write data to peer {} from {}", peer_addr_.toIpPort(), name_);
+                LOGGER_ERROR("net", "Failed to write data to peer {} from {}", peer_addr_.toIpPort(), name_);
                 // EPIPE 意味着与另一端的通信已经中断或对方已经关闭了连接
                 // ECONNRESET 表示连接已经被重置，通常需要重新建立连接或重新发送数据
                 if (errno == EPIPE || errno == ECONNRESET) {

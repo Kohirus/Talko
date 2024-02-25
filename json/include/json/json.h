@@ -1,11 +1,11 @@
 #pragma once
 
-#include <config/json_node.h>
-#include <config/token.h>
+#include <json/json_node.h>
+#include <json/token.h>
 #include <istream>
 #include <queue>
 
-namespace talko::config {
+namespace talko::json {
 class Json {
 public:
     /** 解析输入流 */
@@ -58,4 +58,4 @@ private:
 private:
     static TokenType pre_type_; ///< 上一个类型
 };
-} // namespace talko::config
+} // namespace talko::json

@@ -12,14 +12,14 @@ EventLoop::EventLoop()
     , wakeup_fd_(common::createEventFd())
     , wakeup_channel_(std::make_unique<Channel>(this, wakeup_fd_))
     , timer_queue_(std::make_unique<TimerQueue>(this)) {
-    LOG_DEBUG("Create EventLoop[{}]", fmt::ptr(this));
+    LOGGER_DEBUG("net", "Create EventLoop[{}]", fmt::ptr(this));
     // 让唤醒事件描述符监听可读事件
     wakeup_channel_->setReadCallback(std::bind(&EventLoop::handleReadToWakeUp, this));
     wakeup_channel_->enableReading();
 }
 
 EventLoop::~EventLoop() {
-    LOG_DEBUG("Destory EventLoop[{}] of thread {}", fmt::ptr(this), thread_id_);
+    LOGGER_DEBUG("net", "Destory EventLoop[{}] of thread {}", fmt::ptr(this), thread_id_);
     wakeup_channel_->disableAll();
     wakeup_channel_->remove();
     common::close(wakeup_fd_);
@@ -31,7 +31,7 @@ void EventLoop::loop() {
 
     looping_ = true;
     quit_    = false;
-    LOG_TRACE("EventLoop[{}] start looping", fmt::ptr(this));
+    LOGGER_TRACE("net", "EventLoop[{}] start looping", fmt::ptr(this));
 
     while (!quit_) {
         // 阻塞等待描述符上的事件发生
@@ -51,7 +51,7 @@ void EventLoop::loop() {
         handlePendingFunctors();
     }
 
-    LOG_TRACE("EventLoop[{}] stop looping", fmt::ptr(this));
+    LOGGER_TRACE("net", "EventLoop[{}] stop looping", fmt::ptr(this));
     looping_ = false;
 }
 
@@ -66,7 +66,7 @@ void EventLoop::wakeup() {
     uint64_t one = 1;
     ssize_t  n   = common::write(wakeup_fd_, &one, sizeof(one));
     if (n != sizeof(one)) {
-        LOG_ERROR("Wakeup write {} bytes instead of 8", n);
+        LOGGER_ERROR("net", "Wakeup write {} bytes instead of 8", n);
     }
 }
 
@@ -144,7 +144,7 @@ bool EventLoop::isInCreatorThread() const {
 
 void EventLoop::checkIsInCreatorThread() const {
     if (!isInCreatorThread()) {
-        LOG_FATAL("EventLoop[{}] was created in thread {} or not current thread",
+        LOGGER_FATAL("net","EventLoop[{}] was created in thread {} or not current thread",
             fmt::ptr(this), thread_id_);
     }
 }
@@ -153,7 +153,7 @@ void EventLoop::handleReadToWakeUp() {
     uint64_t one = 1;
     ssize_t  n   = common::read(wakeup_fd_, &one, sizeof(one));
     if (n != sizeof(one)) {
-        LOG_ERROR("Read {} bytes instead of 8 from wakeup", n);
+        LOGGER_ERROR("net", "Read {} bytes instead of 8 from wakeup", n);
     }
 }
 

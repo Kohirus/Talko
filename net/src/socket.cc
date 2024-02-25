@@ -18,7 +18,7 @@ int Socket::fd() const {
 
 void Socket::bindAddress(const InetAddress& localAddr) {
     common::bind(sockfd_, localAddr.sockAddr());
-    LOG_DEBUG("Bind address {}", localAddr.toIpPort());
+    LOGGER_DEBUG("net", "Bind address {}", localAddr.toIpPort());
 }
 
 void Socket::listen() {

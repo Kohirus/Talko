@@ -18,6 +18,10 @@ LogLevel globalLevel() {
     return LogManager::instance().globalLevel();
 }
 
+void setGlobalLevel(LogLevel level) {
+    return LogManager::instance().setGlobalLevel(level);
+}
+
 bool registerLogger(LoggerPtr logger) {
     return LogManager::instance().registerLogger(std::move(logger));
 }

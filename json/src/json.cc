@@ -1,11 +1,11 @@
 #include <cassert>
-#include <config/json.h>
-#include <config/json_expection.h>
 #include <fstream>
 #include <iostream> // TODO: delete
+#include <json/json.h>
+#include <json/json_expection.h>
 #include <sstream>
 
-namespace talko::config {
+namespace talko::json {
 const int kBeginObject = 1;
 const int kEndObject   = 2;
 const int kBeginArray  = 4;
@@ -100,6 +100,9 @@ JsonNode Json::parseObjectNode(TokenQueue& tokens) {
     std::string key = "";
 
     int expection_token = kString | kBeginObject;
+    if (pre_type_ == TokenType::BeginObject) {
+        expection_token |= kEndObject;
+    }
 
     while (!tokens.empty()) {
         Token token = tokens.front();
@@ -130,7 +133,7 @@ JsonNode Json::parseObjectNode(TokenQueue& tokens) {
             expection_token = kSepComma | kEndObject | kEndDocument;
             break;
         case TokenType::Null:
-            node.append(key, JsonNode::null());
+            node.append(key, JsonNode::invalid());
             expection_token = kSepComma | kEndObject;
             break;
         case TokenType::Number:
@@ -207,7 +210,7 @@ JsonNode Json::parseArrayNode(TokenQueue& tokens) {
             return node;
             break;
         case TokenType::Null:
-            node.append(JsonNode::null());
+            node.append(JsonNode::invalid());
             expection_token = kSepComma | kEndArray;
             break;
         case TokenType::Number:
@@ -393,4 +396,4 @@ void Json::printTokens(TokenQueue& tokens) {
         tokens.pop();
     }
 }
-} // namespace talko::config
+} // namespace talko::json

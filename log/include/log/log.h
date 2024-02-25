@@ -22,6 +22,9 @@ void setFormatter(FormatterPtr formatter);
 /** 获取全局日志等级 */
 LogLevel globalLevel();
 
+/** 设置全局日志等级 */
+void setGlobalLevel(LogLevel level);
+
 /** 注册日志器 */
 bool registerLogger(LoggerPtr logger);
 

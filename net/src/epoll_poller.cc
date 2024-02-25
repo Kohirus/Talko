@@ -31,7 +31,7 @@ EpollPoller::~EpollPoller() {
 }
 
 TimePoint EpollPoller::poll(int timeout, ChannelList* active_channels) {
-    LOG_TRACE("Totoal count of fd: {}", channels_.size());
+    LOGGER_TRACE("net", "Totoal count of fd: {}", channels_.size());
 
     // 阻塞等待事件发生
     int num_events  = ::epoll_wait(ep_fd_, &*events_.begin(), events_.size(), timeout);
@@ -42,17 +42,17 @@ TimePoint EpollPoller::poll(int timeout, ChannelList* active_channels) {
 
     if (num_events < 0) { // 发生错误
         if (saved_errno != EINTR) {
-            LOG_ERROR("Failed to epoll wait: {}", std::strerror(saved_errno));
+            LOGGER_ERROR("net", "Failed to epoll wait: {}", std::strerror(saved_errno));
         }
     } else if (num_events > 0) { // 发生事件
-        LOG_TRACE("{} events happened", num_events);
+        LOGGER_TRACE("net", "{} events happened", num_events);
         fillActiveChannels(num_events, active_channels);
         // 容量不够则进行2倍扩容
         if (num_events == static_cast<int>(events_.size())) {
             events_.resize(events_.size() * 2);
         }
     } else { // 无事件发生
-        LOG_TRACE("Nothing happened");
+        LOGGER_TRACE("net", "Nothing happened");
     }
 
     return now;
@@ -62,7 +62,7 @@ void EpollPoller::updateChannel(Channel* channel) {
     owner_loop_->checkIsInCreatorThread();
 
     Status status = channel->status();
-    LOG_TRACE("fd {} modify event {}, current status is {}", channel->fd(),
+    LOGGER_TRACE("net", "fd {} modify event {}, current status is {}", channel->fd(),
         common::eventsToString(channel->events()), toString(status));
 
     if (status == Status::New || status == Status::Deleted) {
@@ -97,7 +97,7 @@ void EpollPoller::removeChannel(Channel* channel) {
     owner_loop_->checkIsInCreatorThread();
 
     int fd = channel->fd();
-    LOG_TRACE("Remove fd {} from epoll", fd);
+    LOGGER_TRACE("net", "Remove fd {} from epoll", fd);
     assert(channels_.find(fd) != channels_.end());
     assert(channels_[fd] == channel);
     assert(channel->isNoneEvent());
@@ -123,14 +123,14 @@ void EpollPoller::update(int operation, Channel* channel) {
     event.data.ptr = channel;
     int fd         = channel->fd();
 
-    LOG_TRACE("Control fd {} with {} operation, events: {}", fd,
+    LOGGER_TRACE("net", "Control fd {} with {} operation, events: {}", fd,
         common::operationToString(operation), common::eventsToString(channel->events()));
 
     if (::epoll_ctl(ep_fd_, operation, fd, &event) < 0) {
         if (operation == EPOLL_CTL_DEL) {
-            LOG_ERROR("Failed to {} fd {}: {}", common::operationToString(operation), fd, std::strerror(errno));
+            LOGGER_ERROR("net", "Failed to {} fd {}: {}", common::operationToString(operation), fd, std::strerror(errno));
         } else {
-            LOG_FATAL("Failed to {} fd {}: {}", common::operationToString(operation), fd, std::strerror(errno));
+            LOGGER_FATAL("net","Failed to {} fd {}: {}", common::operationToString(operation), fd, std::strerror(errno));
         }
     }
 }

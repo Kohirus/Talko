@@ -11,7 +11,7 @@
 namespace talko::net {
 /** 默认的连接回调函数 */
 void defaultConnectionCallback(const TcpConnectionPtr& conn) {
-    LOG_TRACE("Connection between {} and {} is {}", conn->localAddress().toIpPort(),
+    LOGGER_TRACE("net", "Connection between {} and {} is {}", conn->localAddress().toIpPort(),
         conn->peerAddress().toIpPort(), (conn->connected() ? "up" : "down"));
 }
 
@@ -34,7 +34,7 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& listen_addr, const std:
 
 TcpServer::~TcpServer() {
     main_loop_->checkIsInCreatorThread();
-    LOG_TRACE("Destory TcpServer[{}]", name_);
+    LOGGER_TRACE("net", "Destory TcpServer[{}]", name_);
 
     // 销毁所有的连接
     for (auto& item : connections_) {
@@ -101,7 +101,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peer_addr) {
     std::string conn_name = fmt::format("{}-{}#{}", name_, ip_port_, nxt_conn_id_);
     ++nxt_conn_id_;
 
-    LOG_INFO("New connection {} with {} on socket fd {}", conn_name, peer_addr.toIpPort(), sockfd);
+    LOGGER_INFO("net", "New connection {} with {} on socket fd {}", conn_name, peer_addr.toIpPort(), sockfd);
     InetAddress local_addr(common::getLocalAddr(sockfd));
 
     // 创建新连接
@@ -124,7 +124,7 @@ void TcpServer::removeConnection(const TcpConnectionPtr& conn) {
 
 void TcpServer::removeConnection_(const TcpConnectionPtr& conn) {
     main_loop_->checkIsInCreatorThread();
-    LOG_INFO("Remove connection {} from {}", conn->name(), name_);
+    LOGGER_INFO("net", "Remove connection {} from {}", conn->name(), name_);
     connections_.erase(conn->name());
     conn->loop()->runInLoop(std::bind(&TcpConnection::connectionDestoryed, conn));
 }

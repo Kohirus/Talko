@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace talko::config {
+namespace talko::json {
 /** 令牌类型 */
 enum class TokenType {
     BeginObject = 1,   ///< 对象开始 {
@@ -71,4 +71,4 @@ private:
     TokenType   type_ { TokenType::Null }; ///< 令牌类型
     bool        decimal_ { false };        ///< 是否为浮点数
 };
-} // namespace talko::config
+} // namespace talko::json

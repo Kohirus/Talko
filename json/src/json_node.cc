@@ -1,8 +1,8 @@
-#include <config/json_expection.h>
-#include <config/json_node.h>
 #include <iostream> // TODO: delete
+#include <json/json_expection.h>
+#include <json/json_node.h>
 
-namespace talko::config {
+namespace talko::json {
 const int kNull    = 0;
 const int kInteger = 1;
 const int kDecimal = 2;
@@ -11,15 +11,15 @@ const int kString  = 4;
 const int kObject  = 5;
 const int kArray   = 6;
 
-JsonNode JsonNode::null() {
+JsonNode JsonNode::invalid() {
     return JsonNode();
 }
 
-JsonNode& JsonNode::operator[](const std::string& key) {
+const JsonNode& JsonNode::operator[](const std::string& key) const {
     if (data_.index() != kObject) {
         throw JsonParseException("Not object node");
     }
-    return std::get<ObjectNode>(data_)[key];
+    return std::get<ObjectNode>(data_).at(key);
 }
 
 const JsonNode& JsonNode::at(const std::string& key) const {
@@ -29,7 +29,7 @@ const JsonNode& JsonNode::at(const std::string& key) const {
     return std::get<ObjectNode>(data_).at(key);
 }
 
-JsonNode& JsonNode::operator[](size_t index) {
+const JsonNode& JsonNode::operator[](size_t index) const {
     if (data_.index() != kArray) {
         throw JsonParseException("Not array node");
     }
@@ -43,7 +43,7 @@ const JsonNode& JsonNode::at(size_t index) const {
     return std::get<ArrayNode>(data_).at(index);
 }
 
-bool JsonNode::isNull() const {
+bool JsonNode::isInvalid() const {
     return data_.index() == kNull;
 }
 
@@ -77,7 +77,7 @@ size_t JsonNode::count() const {
     }
 }
 
-bool JsonNode::has(const std::string& key) {
+bool JsonNode::has(const std::string& key) const {
     if (data_.index() == kObject) {
         return std::get<ObjectNode>(data_).count(key) != 0;
     } else {
@@ -121,4 +121,4 @@ void JsonNode::print(int level) {
         throw JsonParseException("Unknown node type");
     }
 }
-} // namespace talko::config
+} // namespace talko::json

@@ -21,6 +21,29 @@ enum class Color {
     Default    ///< 默认
 };
 
+/** 将字符串转为颜色枚举变量 */
+inline Color fromString(const std::string& str) {
+    if (str == "black") {
+        return Color::Black;
+    } else if (str == "red") {
+        return Color::Red;
+    } else if (str == "green") {
+        return Color::Green;
+    } else if (str == "yellow") {
+        return Color::Yellow;
+    } else if (str == "blue") {
+        return Color::Blue;
+    } else if (str == "purple") {
+        return Color::Purple;
+    } else if (str == "cyan") {
+        return Color::Cyan;
+    } else if (str == "white") {
+        return Color::White;
+    } else {
+        return Color::Default;
+    }
+}
+
 /**
  * @brief 终端字体属性
  *

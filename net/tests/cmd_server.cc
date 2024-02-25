@@ -19,11 +19,11 @@ public:
 private:
     void onConnection(const net::TcpConnectionPtr& conn) {
         if (conn->connected()) {
-            LOGGER_INFO("cmd_server", "{} connect", conn->peerAddress().toIpPort());
+            LOGGER_INFO("net", "cmd_server", "{} connect", conn->peerAddress().toIpPort());
             conn->send("Command Format: {[number]|stop|close}\n");
             timers_[conn->name()] = std::nullopt;
         } else {
-            LOGGER_INFO("cmd_server", "{} disconnect", conn->peerAddress().toIpPort());
+            LOGGER_INFO("net", "cmd_server", "{} disconnect", conn->peerAddress().toIpPort());
             auto it = timers_.find(conn->name());
             if (it != timers_.end() && it->second.has_value()) {
                 loop_->cancel(it->second.value());
@@ -57,7 +57,7 @@ private:
                 return;
             }
             conn->send("Timer is start\n");
-            auto timer_id = loop_->runEvery(std::chrono::milliseconds(ms), std::bind(&CmdServer::sendHello, this, conn));
+            auto timer_id         = loop_->runEvery(std::chrono::milliseconds(ms), std::bind(&CmdServer::sendHello, this, conn));
             timers_[conn->name()] = timer_id;
         }
     }

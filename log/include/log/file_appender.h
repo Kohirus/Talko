@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <filesystem>
+#include <fmt/core.h>
 #include <log/factory.h>
 #include <log/log_appender.h>
 #include <log/log_formatter.h>
@@ -73,7 +74,7 @@ private:
         std::filesystem::path file_path(filename_);
 
         // 判断是否含有文件名
-        std::string err_msg = "'" + filename_ + "' has not filename";
+        std::string err_msg = fmt::format("{} has not filename.", filename_);
         assert(file_path.has_filename() && err_msg.c_str());
 
         if (!std::filesystem::exists(file_path)) {
@@ -81,19 +82,19 @@ private:
             auto parent_path = file_path.parent_path();
 
             // 判断该路径是否存在 不存在则创建路径
-            if (!std::filesystem::exists(parent_path)) {
+            if (!parent_path.empty() && !std::filesystem::exists(parent_path)) {
                 err_msg = "Failed to create path: " + parent_path.string() + "'.";
                 assert(std::filesystem::create_directories(parent_path) && err_msg.c_str());
             }
         } else {
             // 若文件存在则判断指定路径是否为文件
-            err_msg = "File path '" + filename_ + "' is not a regular file.";
+            err_msg = fmt::format("File path {} is not a regular file.", filename_);
             assert(std::filesystem::is_regular_file(file_path) && err_msg.c_str());
         }
 
         // 打开文件 文件不存在则创建文件
         FILE* file = ::fopen(filename_.c_str(), mode_.c_str());
-        err_msg    = "Failed to open file: '" + filename_ + "'.";
+        err_msg    = fmt::format("Failed to open file: {}.", filename_);
         assert(file != nullptr && err_msg.c_str());
         output_.setHandler(file);
     }
