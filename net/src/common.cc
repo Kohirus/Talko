@@ -159,6 +159,10 @@ int accept(int sockfd, sockaddr* addr) {
     return connfd;
 }
 
+int connect(int sockfd, const sockaddr* addr) {
+    return ::connect(sockfd, addr, static_cast<socklen_t>(sizeof(sockaddr_in)));
+}
+
 void enableSocketOption(int sockfd, int level, int optname, bool enabled) {
     int optval = enabled ? 1 : 0;
     if (::setsockopt(sockfd, level, optname, &optval, static_cast<socklen_t>(sizeof(optval))) < 0) {
@@ -183,6 +187,16 @@ ssize_t read(int sockfd, void* buf, size_t count) {
 
 ssize_t readv(int sockfd, const iovec* iov, int iovcnt) {
     return ::readv(sockfd, iov, iovcnt);
+}
+
+bool isSelfConnection(int sockfd) {
+    sockaddr_in local_addr = getLocalAddr(sockfd);
+    sockaddr_in peer_addr  = getPeerAddr(sockfd);
+    if (local_addr.sin_family == AF_INET) {
+        return local_addr.sin_port == peer_addr.sin_port
+            && local_addr.sin_addr.s_addr == peer_addr.sin_addr.s_addr;
+    }
+    return false;
 }
 
 std::string eventsToString(int events) {

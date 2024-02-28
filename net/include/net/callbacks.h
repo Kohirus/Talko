@@ -18,4 +18,10 @@ using CloseCallback         = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using MessageCallback       = std::function<void(const TcpConnectionPtr&, ByteBuffer*, TimePoint)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
+
+/** 默认的连接回调函数 */
+void defaultConnectionCallback(const TcpConnectionPtr& conn);
+
+/** 默认的消息回调函数 */
+void defaultMessageCallback(const TcpConnectionPtr&, ByteBuffer* buffer, TimePoint);
 } // namespace talko::net

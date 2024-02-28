@@ -11,3 +11,4 @@
 #include <net/inet_address.h>
 #include <net/tcp_connection.h>
 #include <net/tcp_server.h>
+#include <net/tcp_client.h>

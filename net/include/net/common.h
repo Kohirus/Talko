@@ -71,7 +71,7 @@ int createTimerFd();
 
 /**
  * @brief 重置定时器超时时刻
- * 
+ *
  * @param timer_fd 定时器文件描述符
  * @param expiration 定时器超时时刻
  */
@@ -79,7 +79,7 @@ void resetTimerFd(int timer_fd, TimePoint expiration);
 
 /**
  * @brief 读取定时器文件描述符
- * 
+ *
  * @param timer_fd 定时器文件描述符
  * @param now 当前时间点
  */
@@ -96,6 +96,9 @@ void listen(int sockfd);
 
 /** 接收客户端连接并返回相应的套接字描述符 */
 int accept(int sockfd, sockaddr* addr);
+
+/** 连接服务器 */
+int connect(int sockfd, const sockaddr* addr);
 
 /**
  * @brief 开启套接字选项
@@ -139,6 +142,9 @@ ssize_t read(int sockfd, void* buf, size_t count);
  * @return ssize_t 返回实际读取的字节数
  */
 ssize_t readv(int sockfd, const iovec* iov, int iovcnt);
+
+/** 是否为自连接 */
+bool isSelfConnection(int sockfd);
 
 /** 将事件类型转化为字符串形式用于打印 */
 std::string eventsToString(int events);

@@ -7,32 +7,30 @@ using namespace talko;
 
 void connectionCallback(const net::TcpConnectionPtr& conn) {
     if (conn->connected()) {
-        log::get("echo_svr")->debug("Connection {} Established", conn->name());
+        log::debug("Connection {} Established", conn->name());
     } else {
-        log::get("echo_svr")->debug("Connection {} Destoryed", conn->name());
+        log::debug("Connection {} Destoryed", conn->name());
     }
 }
 
 void echoMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer* buffer, net::TimePoint receive_time) {
     std::string message = "";
     buffer->readBytes(message);
-    log::get("echo_svr")->debug("Receive message from connection {}: {}", conn->name(), message);
+    log::debug("Receive message from connection {}: {}", conn->name(), message);
     conn->send(message);
 }
 
 void writeCompleteCallback(const net::TcpConnectionPtr& conn) {
-    log::get("echo_svr")->debug("Echo message to {} in connection completely", conn->peerAddress().toIpPort(), conn->name());
+    log::debug("Echo message to {} in connection completely", conn->peerAddress().toIpPort(), conn->name());
 }
 
 int main() {
-    log::defaultLogger()->setLevel(log::LogLevel::debug);
-    log::defaultLogger()->setPattern("[%T.%f] [%C] [%l] [%E] %v");
+    auto logger = log::createConsoleLoggerMt("net");
+    log::registerLogger(logger);
+    log::setGlobalLevel(log::LogLevel::debug);
+    log::setPattern("[%T.%f] [%C] [%l] [%E] %v");
     // log::defaultLogger()->setLevel(log::LogLevel::trace);
     // log::defaultLogger()->setPattern("[%T.%f] [%C] [%l] [%E] [%k] %v");
-
-    auto logger = log::createConsoleLoggerMt("echo_svr");
-    logger->setLevel(log::LogLevel::debug);
-    log::registerLogger(logger);
 
     tp::setThreadPoolMode(tp::ThreadPoolMode::dynamic);
     tp::start();

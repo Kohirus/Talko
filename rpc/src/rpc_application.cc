@@ -26,7 +26,7 @@ void RpcApplication::init(int argc, char** argv) {
     LOGGER_INFO("rpc", "Configuration initialization completed");
 }
 
-net::InetAddress RpcApplication::localAddress() const {
+net::InetAddress RpcApplication::serverAddress() const {
     return net::InetAddress(ip_, port_);
 }
 
@@ -84,7 +84,6 @@ void RpcApplication::initLog() {
     // 配置日志器
     if (config_["log"].has("logger") && !config_["log"]["logger"].isInvalid()) {
         size_t logger_cnt = config_["log"]["logger"].count();
-        std::cout << "logger count: " << logger_cnt << std::endl;
         for (size_t i = 0; i < logger_cnt; ++i) {
             configLogger(funcs, config_["log"]["logger"][i], default_name, global_level, global_pattern);
         }
@@ -112,7 +111,7 @@ void RpcApplication::initNetwork() {
         return;
     }
 
-    name_        = config_["network"].valueOf("name", std::string("rpc"));
+    name_        = config_["network"].valueOf("name", std::string("RpcProvider"));
     ip_          = config_["network"].valueOf("ip", std::string("0.0.0.0"));
     port_        = static_cast<uint16_t>(config_["network"].valueOf("port", 8888));
     reuse_port_  = config_["network"].valueOf("reuse_port", false);
@@ -128,7 +127,7 @@ void RpcApplication::configLogger(std::queue<std::function<void()>>& funcs, cons
 
     // 检测该日志器是否已经存在
     if (log::exist(log_name)) {
-        std::cerr << fmt::format("Logger named {} is existed.", log_name) << std::endl;
+        std::cerr << fmt::format("Logger named [{}] is existed.", log_name) << std::endl;
         std::exit(EXIT_SUCCESS);
     }
 
@@ -158,8 +157,6 @@ void RpcApplication::configLogger(std::queue<std::function<void()>>& funcs, cons
         auto appender = std::make_shared<log::ConsoleAppenderMt>();
         logger->appenders().push_back(appender);
     }
-
-    ensureNetAndRpcLogger();
 }
 
 log::AppenderPtr RpcApplication::configAppender(FuncQueue& funcs, const json::JsonNode& node,

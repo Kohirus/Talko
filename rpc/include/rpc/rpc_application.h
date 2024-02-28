@@ -3,6 +3,9 @@
 #include <json/json.h>
 #include <log/log.h>
 #include <net/inet_address.h>
+#include <rpc/rpc_channel.h>
+#include <rpc/rpc_controller.h>
+#include <rpc/rpc_provider.h>
 
 namespace talko::rpc {
 class RpcApplication {
@@ -32,8 +35,8 @@ public:
     /** 获取子事件循环的数目 */
     inline size_t subloopSize() const { return subloop_num_; }
 
-    /** 返回本机网络地址 */
-    net::InetAddress localAddress() const;
+    /** 返回服务器网络地址 */
+    net::InetAddress serverAddress() const;
 
 private:
     using FuncQueue = std::queue<std::function<void()>>;
@@ -83,10 +86,10 @@ private:
 private:
     json::JsonNode config_; ///< Json配置根节点
 
-    std::string name_ { "rpc" };       ///< 服务器名称
-    std::string ip_ { "0.0.0.0" };     ///< IP地址
-    uint16_t    port_ { 8888 };        ///< 端口号
-    bool        reuse_port_ { false }; ///< 是否复用端口
-    size_t      subloop_num_ { 3 };    ///< 子事件循环数目
+    std::string name_ { "RpcProvider" }; ///< 服务器名称
+    std::string ip_ { "0.0.0.0" };       ///< IP地址
+    uint16_t    port_ { 8888 };          ///< 端口号
+    bool        reuse_port_ { false };   ///< 是否复用端口
+    size_t      subloop_num_ { 3 };      ///< 子事件循环数目
 };
 } // namespace talko::rpc

@@ -134,13 +134,13 @@ void Channel::handleEvent_(TimePoint receive_time) {
 
     // 发生套接字挂起事件 即远端关闭连接或主动关闭套接字
     if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
-        log::warn("fd {} happend POLLHUP event", fd_);
+        LOGGER_WARN("net", "fd {} happend POLLHUP event", fd_);
         if (close_callback_) close_callback_();
     }
 
     // 发生套接字无效事件
     if (revents_ & POLLNVAL) {
-        log::warn("fd {} happend POLLNVAL event", fd_);
+        LOGGER_WARN("net", "fd {} happend POLLNVAL event", fd_);
     }
 
     // 发生套接字错误事件

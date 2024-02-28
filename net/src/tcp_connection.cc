@@ -220,7 +220,7 @@ void TcpConnection::send_(std::string_view message) {
     size_t  remaining = message.size(); // 剩余的字节数目
     bool    fault     = false;
     if (state_ == State::Disconnected) {
-        log::warn("Disconnected, give up writing");
+        LOGGER_WARN("net", "Disconnected, give up writing");
         return;
     }
 

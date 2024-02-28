@@ -1,12 +1,23 @@
 #pragma once
 
+/** fmt */
 #include <fmt/core.h>
+
+/** Appender */
 #include <log/console_appender.h>
 #include <log/file_appender.h>
-#include <log/log_formatter.h>
-#include <log/log_manager.h>
-#include <log/logger.h>
 #include <log/rotating_file_appender.h>
+
+/** Formatter */
+#include <log/log_formatter.h>
+
+/** Manager */
+#include <log/log_manager.h>
+
+/** Logger */
+#include <log/logger.h>
+
+/** Types */
 #include <log/types.h>
 
 namespace talko::log {

@@ -1,5 +1,5 @@
 macro(add_target name type)
-    file(GLOB_RECURSE srcs CONFIGURE_DEPENDS src/*.cc src/*.h)
+    file(GLOB_RECURSE srcs CONFIGURE_DEPENDS src/*.cc)
     if ("${type}" MATCHES "EXECUTABLE")
         add_executable(${name} ${srcs})
     else()
