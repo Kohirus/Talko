@@ -37,3 +37,5 @@ add_subdirectory(log)
 add_subdirectory(json)
 add_subdirectory(net)
 add_subdirectory(rpc)
+
+add_subdirectory(registry)

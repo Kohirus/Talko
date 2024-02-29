@@ -5,6 +5,10 @@
 #include <rpc/rpc_provider.h>
 
 namespace talko::rpc {
+RpcProvider::RpcProvider()
+    : register_(std::chrono::seconds(10)) {
+}
+
 void RpcProvider::publish(ServicePtr service) {
     ServiceInfo info;
     info.service = service;
@@ -29,6 +33,16 @@ void RpcProvider::publish(ServicePtr service) {
 }
 
 void RpcProvider::run() {
+    if (!register_.connect()) {
+        LOGGER_ERROR("rpc", "Failed to connect to Register: {}", register_.errorMessage());
+        exit(EXIT_FAILURE);
+    } else {
+        LOGGER_INFO("rpc", "Connection with Register established");
+    }
+
+    LOGGER_INFO("rpc", "addr: {}, ip: {}", RpcApplication::instance().ip(),
+        RpcApplication::instance().port());
+
     // 设置服务器参数
     net::TcpServer server(&loop_, RpcApplication::instance().serverAddress(),
         RpcApplication::instance().serverName(), RpcApplication::instance().reusePort());
@@ -63,8 +77,8 @@ void RpcProvider::onMessage(const net::TcpConnectionPtr& conn,
     message.copy(reinterpret_cast<char*>(&header_size), sizeof(header_size), 0);
 
     // 根据头部序列大小读取头部内容
-    std::string      rpc_header_content = message.substr(4, header_size);
-    ::rpc::RpcHeader rpc_header;
+    std::string rpc_header_content = message.substr(4, header_size);
+    RpcHeader   rpc_header;
 
     std::string service_name, method_name;
     uint32_t    args_size;

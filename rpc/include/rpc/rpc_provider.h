@@ -1,6 +1,7 @@
 #pragma once
 
 #include <net/net.h>
+#include <rpc/rpc_registry.h>
 #include <rpc/rpc_types.h>
 #include <unordered_map>
 
@@ -12,7 +13,7 @@ namespace talko::rpc {
  */
 class RpcProvider {
 public:
-    RpcProvider()  = default;
+    RpcProvider();
     ~RpcProvider() = default;
 
     RpcProvider(const RpcProvider&)            = delete;
@@ -61,5 +62,6 @@ private:
 private:
     net::EventLoop loop_;     ///< 事件循环
     ServiceHash    services_; ///< 服务信息映射表
+    RpcRegistry    register_; ///< 注册器
 };
 } // namespace talko::rpc

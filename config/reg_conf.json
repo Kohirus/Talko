@@ -1,0 +1,23 @@
+{
+    "thread": {
+        "dynamic_mode": true
+    },
+    "log": {
+        "level": "info",
+        "formatter": "[%T.%f] [%C] [%l] [%E] %v",
+        "logger": [
+            {
+                "name": "net",
+                "level": "debug"
+            },
+            {
+                "name": "rpc",
+                "level": "debug"
+            }
+        ]
+    },
+    "network": {
+        "name": "Register",
+        "port": 8888
+    }
+}

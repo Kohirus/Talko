@@ -11,7 +11,7 @@
 namespace talko::net::common {
 void setSocketAddr(sockaddr_in& addr, std::string_view ip, uint16_t port) {
     addr.sin_family = AF_INET;
-    addr.sin_port   = port;
+    addr.sin_port   = hostToNetwork(port);
     if (::inet_pton(AF_INET, ip.data(), &addr.sin_addr) < 0) {
         LOGGER_FATAL("net", "Failed to set sockaddr_in [{}:{}]: {}", ip, port, std::strerror(errno));
     }

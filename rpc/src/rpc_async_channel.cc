@@ -62,7 +62,7 @@ void RpcAsyncChannel::handleRequest(const std::string& service_name, const std::
     size_t args_size = args_content.size();
 
     // 生成RPC请求头
-    ::rpc::RpcHeader rpc_header;
+    RpcHeader rpc_header;
     rpc_header.set_service_name(service_name);
     rpc_header.set_method_name(method_name);
     rpc_header.set_args_size(static_cast<uint32_t>(args_size));

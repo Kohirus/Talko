@@ -16,18 +16,29 @@ void RpcApplication::init(int argc, char** argv) {
     if (argc == 2) {
         config_ = json::Json::parseFromFile(argv[1]);
     } else {
-        ensureNetAndRpcLogger();
+        // ensureNetAndRpcLogger();
+        // TODO:
+        config_ = json::Json::parseFromFile("../config/pvd_conf.json");
     }
 
     initThreadPool();
     initLog();
     initNetwork();
+    initRegister();
 
     LOGGER_INFO("rpc", "Configuration initialization completed");
 }
 
 net::InetAddress RpcApplication::serverAddress() const {
+    if (ip_ == "127.0.0.1")
+        return net::InetAddress(port_, true);
     return net::InetAddress(ip_, port_);
+}
+
+net::InetAddress RpcApplication::registerAddress() const {
+    if (ip_ == "127.0.0.1")
+        return net::InetAddress(register_port_, true);
+    return net::InetAddress(register_ip_, register_port_);
 }
 
 void RpcApplication::initThreadPool() {
@@ -116,6 +127,15 @@ void RpcApplication::initNetwork() {
     port_        = static_cast<uint16_t>(config_["network"].valueOf("port", 8888));
     reuse_port_  = config_["network"].valueOf("reuse_port", false);
     subloop_num_ = static_cast<size_t>(config_["network"].valueOf("subloop_num", 3));
+}
+
+void RpcApplication::initRegister() {
+    if (config_.isInvalid() || !config_.has("register") || config_["register"].isInvalid()) {
+        return;
+    }
+
+    register_ip_   = config_["register"].valueOf("ip", std::string("127.0.0.1"));
+    register_port_ = static_cast<uint16_t>(config_["register"].valueOf("port", 8888));
 }
 
 void RpcApplication::configLogger(std::queue<std::function<void()>>& funcs, const json::JsonNode& node,

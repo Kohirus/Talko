@@ -1,0 +1,27 @@
+{
+    "thread": {
+        "dynamic_mode": true
+    },
+    "log": {
+        "level": "info",
+        "formatter": "[%T.%f] [%C] [%l] [%E] [%k] %v",
+        "logger": [
+            {
+                "name": "net",
+                "level": "debug"
+            },
+            {
+                "name": "rpc",
+                "level": "trace"
+            }
+        ]
+    },
+    "network": {
+        "name": "RpcProvider",
+        "port": 8000
+    },
+    "register": {
+        "ip": "127.0.0.1",
+        "port": 8888
+    }
+}

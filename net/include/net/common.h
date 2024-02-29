@@ -9,7 +9,7 @@
 
 namespace talko::net::common {
 
-/** 将网络序转换为主机序 */
+/** 将主机字节序转换为网络字节序 */
 template <typename T>
 T hostToNetwork(T host) {
     switch (sizeof(host)) {
@@ -24,7 +24,7 @@ T hostToNetwork(T host) {
     }
 }
 
-/** 将主机序转换为网络序 */
+/** 将网络字节序转换为主机字节序 */
 template <typename T>
 T networkToHost(T network) {
     switch (sizeof(network)) {
