@@ -2,12 +2,12 @@
 #include <log/log_output.h>
 #include <pool/thread_pool.h>
 
+namespace talko::log {
 /** 输出缓冲区内容 */
 void outputBuffer(FILE* handler, std::string_view content) {
     ::fwrite_unlocked(content.data(), sizeof(char), content.size(), handler);
 }
 
-namespace talko::log {
 size_t LogOutput::max_buffer_size_ { 4096 };
 
 LogOutput::LogOutput(FILE* handler, bool async)

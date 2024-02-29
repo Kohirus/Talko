@@ -129,7 +129,7 @@ void TcpServer::startSubEventLoop() {
     // 开启循环
     sub_loop.loop();
 
-    // 销毁时不修改容器内容 仅仅将对应索引的指针赋为空 无需枷锁
+    // 销毁时不修改容器内容 仅仅将对应索引的指针赋为空 无需加锁
     auto iter = std::find(sub_loops_.begin(), sub_loops_.end(), &sub_loop);
     *iter     = nullptr;
 }

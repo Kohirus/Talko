@@ -1,5 +1,6 @@
 #pragma once
 
+#include <any>
 #include <atomic>
 #include <memory>
 #include <net/byte_buffer.h>
@@ -97,6 +98,12 @@ public:
     /** 当TcpServer移除当前连接对象时调用 */
     void connectionDestoryed();
 
+    /** 设置上下文 */
+    void setContext(const std::any& context);
+
+    /** 获取上下文 */
+    std::any& context();
+
 private:
     /** 连接状态 */
     enum class State {
@@ -159,5 +166,7 @@ private:
 
     ByteBuffer input_buffer_;  ///< 输入缓冲区
     ByteBuffer output_buffer_; ///< 输出缓冲区
+
+    std::any context_; ///< 上下文，用于携带额外数据
 };
 } // namespace talko::net

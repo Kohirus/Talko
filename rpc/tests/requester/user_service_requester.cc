@@ -1,11 +1,42 @@
 #include "user.pb.h"
 #include <rpc/rpc_application.h>
+#include <rpc/rpc_async_channel.h>
+#include <thread>
 using namespace talko;
+
+class ResultClosure : public google::protobuf::Closure {
+public:
+    ResultClosure(rpc::RpcController* controller, fixbug::LoginResponse* response)
+        : controller_(controller)
+        , response_(response) {
+    }
+
+    void Run() override {
+        log::debug("RPC Request is finished");
+        if (controller_->failed()) {
+            LOG_ERROR("Failed to execute RPC: {}", controller_->errorMessage());
+        } else {
+            if (response_->result().errcode() == 0) {
+                LOG_INFO("RPC Login response: {}", response_->success());
+            } else {
+                LOG_INFO("RPC Login response error: {}", response_->result().errmsg());
+            }
+        }
+    }
+
+private:
+    rpc::RpcController*    controller_;
+    fixbug::LoginResponse* response_;
+};
 
 int main(int argc, char* argv[]) {
     rpc::RpcApplication::instance().init(argc, argv);
 
-    fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(5)));
+    // 同步请求
+    // fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(5)));
+
+    // 异步请求
+    fixbug::UserServiceRpc_Stub callee(new rpc::RpcAsyncChannel(std::chrono::seconds(5)));
 
     fixbug::LoginRequest request;
     request.set_name("zhang san");
@@ -15,17 +46,11 @@ int main(int argc, char* argv[]) {
 
     rpc::RpcController controller;
 
-    callee.Login(&controller, &request, &response, nullptr);
+    ResultClosure closure(&controller, &response);
 
-    if (controller.failed()) {
-        LOG_ERROR("Failed to execute RPC: {}", controller.errorMessage());
-    } else {
-        if (response.result().errcode() == 0) {
-            LOG_INFO("RPC Login response: {}", response.success());
-        } else {
-            LOG_INFO("RPC Login response error: {}", response.result().errmsg());
-        }
-    }
+    callee.Login(&controller, &request, &response, &closure);
+
+    std::this_thread::sleep_for(std::chrono::seconds(30));
 
     return 0;
 }

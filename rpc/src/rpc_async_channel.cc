@@ -1,27 +1,54 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 #include <rpc/rpc_application.h>
-#include <rpc/rpc_channel.h>
+#include <rpc/rpc_async_channel.h>
 #include <rpc/rpc_header.pb.h>
 
 namespace talko::rpc {
-RpcChannel::RpcChannel(net::Duration timeout)
-    : client_(&loop_, rpc::RpcApplication::instance().serverAddress(), "RpcRequester")
-    , timeout_(timeout) {
-    client_.enableRetry();
-    client_.setConnectionCallback(std::bind(&RpcChannel::onConnection, this, std::placeholders::_1));
-    client_.setMessageCallback(std::bind(&RpcChannel::onMessage, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3));
-}
+RpcAsyncChannel::RpcAsyncChannel(net::Duration timeout)
+    : timeout_(timeout) { }
 
-void RpcChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr controller,
+void RpcAsyncChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr controller,
     ConstMessagePtr request, MessagePtr response, ClosurePtr done) {
-    ServiceDescriptorPtr service = method->service();
+    assert(tp::isRunning() && "Thread pool is stop");
 
+    ServiceDescriptorPtr service = method->service();
     // 获取服务名称和方法名称
     std::string service_name = service->name();
     std::string method_name  = method->name();
 
+    tp::submitTask(std::bind(&RpcAsyncChannel::handleRequest, this, service_name,
+        method_name, controller, request, response, done));
+}
+
+void RpcAsyncChannel::onConnection(const net::TcpConnectionPtr& conn) {
+    if (conn->connected()) {
+        LOGGER_INFO("rpc", "Connection established with RpcProvider");
+        conn->send(package_);
+        LOGGER_TRACE("rpc", "Send package to RpcProvider: {}", package_);
+    } else {
+        LOGGER_INFO("rpc", "Connection destoryed with RpcProvider");
+        conn->loop()->quit();
+    }
+}
+
+void RpcAsyncChannel::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer* buffer, net::TimePoint time) {
+    buffer->readBytes(result_);
+    LOGGER_TRACE("rpc", "Receive response: {}", result_);
+    assert(client_);
+    client_->disconnect();
+}
+
+void RpcAsyncChannel::handleTimeout(RpcControllerPtr controller) {
+    controller->SetFailed("RPC request is timeout");
+    controller->StartCancel();
+    assert(client_);
+    client_->stop();
+    client_->loop()->quit();
+}
+
+void RpcAsyncChannel::handleRequest(const std::string& service_name, const std::string& method_name,
+    RpcControllerPtr controller, ConstMessagePtr request, MessagePtr response, ClosurePtr done) {
     // 序列化RPC请求参数
     std::string args_content;
     if (!request->SerializeToString(&args_content)) {
@@ -65,17 +92,18 @@ void RpcChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr control
         header_size, header_content, service_name, method_name, args_size, args_content);
     result_.clear();
 
-    // 建立TCP连接
-    controller_ = controller;
-    client_.connect();
+    net::EventLoop loop;
 
-    // 启动定时器 防止RPC调用超时 对于RPC调用方 可能的超时情况如下：
-    // 1. 与服务端建立连接时导致的超时；
-    // 2. 组织RPC请求数据导致的超时；(并未处理)
-    // 3. 等待服务端处理RPC请求导致的超时；
-    // 4. 接收到服务端RPC响应后由于解析响应数据导致的超时；(并未处理)
-    loop_.runAfter(timeout_, std::bind(&RpcChannel::handleTimeout, this));
-    loop_.loop();
+    // 建立TCP连接
+    client_ = std::make_unique<net::TcpClient>(&loop, rpc::RpcApplication::instance().serverAddress(), "RpcRequester");
+    client_->enableRetry();
+    client_->setConnectionCallback(std::bind(&RpcAsyncChannel::onConnection, this, std::placeholders::_1));
+    client_->setMessageCallback(std::bind(&RpcAsyncChannel::onMessage, this, std::placeholders::_1,
+        std::placeholders::_2, std::placeholders::_3));
+    client_->connect();
+
+    loop.runAfter(timeout_, std::bind(&RpcAsyncChannel::handleTimeout, this, controller));
+    loop.loop();
 
     if (!controller->Failed()) {
         LOGGER_DEBUG("rpc", "RPC Request is complete");
@@ -87,31 +115,7 @@ void RpcChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr control
         }
     }
 
-    controller_ = nullptr;
+    client_.reset();
     if (done) done->Run();
-}
-
-void RpcChannel::onConnection(const net::TcpConnectionPtr& conn) {
-    if (conn->connected()) {
-        LOGGER_INFO("rpc", "Connection established with RpcProvider");
-        conn->send(package_);
-        LOGGER_TRACE("rpc", "Send package to RpcProvider: {}", package_);
-    } else {
-        LOGGER_INFO("rpc", "Connection destoryed with RpcProvider");
-        conn->loop()->quit();
-    }
-}
-
-void RpcChannel::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer* buffer, net::TimePoint time) {
-    buffer->readBytes(result_);
-    LOGGER_TRACE("rpc", "Receive response: {}", result_);
-    client_.disconnect();
-}
-
-void RpcChannel::handleTimeout() {
-    controller_->SetFailed("RPC request is timeout");
-    controller_->StartCancel();
-    client_.stop();
-    client_.loop()->quit();
 }
 } // namespace talko::rpc

@@ -154,6 +154,14 @@ void TcpConnection::connectionDestoryed() {
     channel_->remove();
 }
 
+void TcpConnection::setContext(const std::any& context) {
+    context_ = context;
+}
+
+std::any& TcpConnection::context() {
+    return context_;
+}
+
 void TcpConnection::handleRead(TimePoint receive_time) {
     loop_->checkIsInCreatorThread();
     int saved_errno = 0;
