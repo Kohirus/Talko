@@ -1,7 +1,6 @@
 #include "user.pb.h"
 #include <rpc/rpc_application.h>
 #include <rpc/rpc_channel.h>
-#include <thread>
 using namespace talko;
 
 class ResultClosure : public google::protobuf::Closure {
@@ -32,21 +31,37 @@ private:
 int main(int argc, char* argv[]) {
     rpc::RpcApplication::instance().init(argc, argv);
 
-    fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(2)));
+    {
+        fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(2)));
 
-    fixbug::LoginRequest request;
-    request.set_name("zhang san");
-    request.set_pwd("123456");
+        fixbug::LoginRequest request;
+        request.set_name("zhang san");
+        request.set_pwd("123456");
 
-    fixbug::LoginResponse response;
+        fixbug::LoginResponse response;
 
-    rpc::RpcController controller;
+        rpc::RpcController controller;
 
-    ResultClosure closure(&controller, &response);
+        ResultClosure closure(&controller, &response);
 
-    callee.Login(&controller, &request, &response, &closure);
+        callee.Login(&controller, &request, &response, &closure);
+    }
 
-    // std::this_thread::sleep_for(std::chrono::seconds(30));
+    {
+        fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(2)));
+
+        fixbug::LoginRequest request;
+        request.set_name("zhang san");
+        request.set_pwd("123456");
+
+        fixbug::LoginResponse response;
+
+        rpc::RpcController controller;
+
+        ResultClosure closure(&controller, &response);
+
+        callee.Login(&controller, &request, &response, &closure);
+    }
 
     return 0;
 }

@@ -4,6 +4,9 @@
 #include <condition_variable>
 #include <mutex>
 #include <net/net.h>
+#include <shared_mutex>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace talko::rpc {
 /**
@@ -83,6 +86,22 @@ private:
     /** 在子线程中向注册中心请求方法 */
     void discoverMethod_(const std::string& service_name, const std::string& method_name);
 
+    /** 缓存中是否存在相关服务 */
+    bool isServiceExistInCache(const std::string& service_name, const std::string& method_name, net::InetAddress& provider_addr);
+
+    /** 将服务存储到缓存中 */
+    void saveServiceInCache(const std::string& service_name, const std::string& method_name, const net::InetAddress& provider_addr);
+
+private:
+    using MethodMap = std::unordered_set<std::string>;
+
+    struct ServiceInfo {
+        net::InetAddress addr;
+        MethodMap        methods;
+    };
+
+    using ServiceMap = std::unordered_map<std::string, ServiceInfo>;
+
 private:
     net::EventLoop* loop_ { nullptr }; ///< 事件循环
     std::mutex      mtx_;              ///< 互斥锁
@@ -107,5 +126,8 @@ private:
 
     net::InetAddress service_addr_;  ///< 服务提供者的地址
     net::InetAddress registry_addr_; ///< 注册中心的地址
+
+    ServiceMap        services_;     ///< 服务缓存表
+    std::shared_mutex services_mtx_; ///< 保护服务缓存表的线程安全
 };
 } // namespace talko::rpc

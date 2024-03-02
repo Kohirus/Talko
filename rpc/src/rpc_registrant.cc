@@ -76,7 +76,15 @@ bool RpcRegistrant::enrollMethod(const std::string& service_name, const std::str
 }
 
 bool RpcRegistrant::discoverMethod(const std::string& service_name, const std::string& method_name, net::Duration timeout, net::InetAddress& provider_addr) {
+    // 在本地缓存查询是否存在该服务
+    if (isServiceExistInCache(service_name, method_name, provider_addr)) {
+        LOGGER_INFO("rpc", "Find [{}]-[{}] in the cache, it is located on {}", service_name,
+            method_name, provider_addr.toIpPort());
+        return true;
+    }
+
     assert(loop_ != nullptr && "Not connected to Registry");
+    LOGGER_DEBUG("rpc", "Not find [{}]-[{}] in the cache, so discover in the RegistryCenter", service_name, method_name);
 
     // 重置相关变量
     response_finished_ = false;
@@ -105,7 +113,10 @@ bool RpcRegistrant::discoverMethod(const std::string& service_name, const std::s
     }
 
     if (response_success_) {
+        // 响应成功则将其存入缓存
         provider_addr = service_addr_;
+        saveServiceInCache(service_name, method_name, provider_addr);
+        LOGGER_DEBUG("rpc", "Save [{}]-[{}]-[{}] in the cache", service_name, method_name, provider_addr.toIpPort());
     }
 
     return response_success_;
@@ -193,6 +204,7 @@ void RpcRegistrant::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer
         response_success_ = false;
     } else { // 响应成功
         // 如果响应类型为发现服务则需要写入RPC服务地址
+        // 同时将其存入缓存
         if (type == registry::MessageType::DISCOVER) {
             assert(response.has_instance());
             std::string ip   = response.instance().address();
@@ -270,5 +282,31 @@ void RpcRegistrant::discoverMethod_(const std::string& service_name, const std::
     std::string result = request.SerializeAsString();
     LOGGER_TRACE("rpc", "Send discover request to the RegistryCenter");
     conn_->send(result);
+}
+
+bool RpcRegistrant::isServiceExistInCache(const std::string& service_name, const std::string& method_name, net::InetAddress& provider_addr) {
+    std::shared_lock<std::shared_mutex> lock(services_mtx_);
+
+    auto iter_srv = services_.find(service_name);
+    if (iter_srv == services_.end()) {
+        return false;
+    }
+
+    auto iter_mtd = iter_srv->second.methods.find(method_name);
+    if (iter_mtd != iter_srv->second.methods.end()) {
+        provider_addr = iter_srv->second.addr;
+        return true;
+    }
+
+    return false;
+}
+
+void RpcRegistrant::saveServiceInCache(const std::string& service_name, const std::string& method_name, const net::InetAddress& provider_addr) {
+    ServiceInfo info;
+    info.addr = provider_addr;
+    info.methods.insert(method_name);
+
+    std::unique_lock<std::shared_mutex> lock(services_mtx_);
+    services_.insert({ service_name, info });
 }
 } // namespace talko::rpc
