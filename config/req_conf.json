@@ -3,7 +3,7 @@
         "dynamic_mode": true
     },
     "log": {
-        "level": "info",
+        "level": "debug",
         "formatter": "[%T.%f] [%C] [%l] [%E] [%k] %v",
         "logger": [
             {
@@ -17,8 +17,8 @@
         ]
     },
     "network": {
-        "name": "RpcProvider",
-        "port": 8000
+        "name": "RpcRequester",
+        "port": 7000
     },
     "registry": {
         "ip": "127.0.0.1",

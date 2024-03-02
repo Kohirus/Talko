@@ -1,12 +1,12 @@
-#include <registry/registry.h>
+#include <registry/registry_center.h>
 #include <rpc/rpc_application.h>
 using namespace talko;
 
 int main(int argc, char* argv[]) {
-    rpc::RpcApplication::instance().init(argc, argv);
+    rpc::RpcApplication::instance().init(argc, argv, true);
 
-    net::EventLoop     loop;
-    registry::Registry reg(&loop);
+    net::EventLoop           loop;
+    registry::RegistryCenter reg(&loop);
 
     reg.start();
     loop.loop();

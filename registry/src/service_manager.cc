@@ -6,7 +6,7 @@ bool ServiceManager::addService(const std::string& service_name, const std::stri
     std::unique_lock<std::shared_mutex> lock(mtx_);
 
     auto iter = services_.find(service_name);
-    if (iter == services_.end()) {
+    if (iter != services_.end()) {
         return false;
     }
 
@@ -24,7 +24,7 @@ bool ServiceManager::addMethod(const std::string& service_name, const std::strin
     }
 
     auto iter_mtd = iter_srv->second.methods.find(method_name);
-    if (iter_mtd == iter_srv->second.methods.end()) {
+    if (iter_mtd != iter_srv->second.methods.end()) {
         return false;
     }
 
@@ -48,7 +48,7 @@ bool ServiceManager::methodExist(const std::string& service_name, const std::str
     }
 
     auto iter_mtd = iter_srv->second.methods.find(method_name);
-    return iter_mtd == iter_srv->second.methods.end();
+    return iter_mtd != iter_srv->second.methods.end();
 }
 
 void ServiceManager::removeService(const std::string& service_name) {

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <rpc/rpc_application.h>
 
 namespace talko::rpc {
@@ -7,7 +6,7 @@ RpcApplication& RpcApplication::instance() {
     return app;
 }
 
-void RpcApplication::init(int argc, char** argv) {
+void RpcApplication::init(int argc, char** argv, bool is_registry) {
     if (argc > 2) {
         std::cerr << "Usage: ./app [config.json]";
         std::exit(EXIT_SUCCESS);
@@ -16,29 +15,26 @@ void RpcApplication::init(int argc, char** argv) {
     if (argc == 2) {
         config_ = json::Json::parseFromFile(argv[1]);
     } else {
-        // ensureNetAndRpcLogger();
-        // TODO:
-        config_ = json::Json::parseFromFile("../config/pvd_conf.json");
+        ensureNetAndRpcLogger();
     }
 
     initThreadPool();
     initLog();
     initNetwork();
-    initRegister();
+    if (!is_registry) {
+        initRegistrant();
+    }
 
     LOGGER_INFO("rpc", "Configuration initialization completed");
+
+    // 连接注册中心
+    if (!is_registry && !RpcRegistrant::instance().connect(connect_timeout_, heartbeat_interval_, registry_center_addr_)) {
+        LOGGER_FATAL("rpc", "Failed to connect to RegistryCenter");
+    }
 }
 
 net::InetAddress RpcApplication::serverAddress() const {
-    if (ip_ == "127.0.0.1")
-        return net::InetAddress(port_, true);
-    return net::InetAddress(ip_, port_);
-}
-
-net::InetAddress RpcApplication::registerAddress() const {
-    if (ip_ == "127.0.0.1")
-        return net::InetAddress(register_port_, true);
-    return net::InetAddress(register_ip_, register_port_);
+    return net::InetAddress(port_, loopback_only_);
 }
 
 void RpcApplication::initThreadPool() {
@@ -122,20 +118,26 @@ void RpcApplication::initNetwork() {
         return;
     }
 
-    name_        = config_["network"].valueOf("name", std::string("RpcProvider"));
-    ip_          = config_["network"].valueOf("ip", std::string("0.0.0.0"));
-    port_        = static_cast<uint16_t>(config_["network"].valueOf("port", 8888));
-    reuse_port_  = config_["network"].valueOf("reuse_port", false);
-    subloop_num_ = static_cast<size_t>(config_["network"].valueOf("subloop_num", 3));
+    name_          = config_["network"].valueOf("name", std::string("TcpServer"));
+    ip_            = config_["network"].valueOf("ip", std::string("127.0.0.1"));
+    port_          = static_cast<uint16_t>(config_["network"].valueOf("port", 8000));
+    reuse_port_    = config_["network"].valueOf("reuse_port", false);
+    loopback_only_ = config_["network"].valueOf("loopback_only", false);
+    subloop_num_   = static_cast<size_t>(config_["network"].valueOf("subloop_num", 3));
 }
 
-void RpcApplication::initRegister() {
-    if (config_.isInvalid() || !config_.has("register") || config_["register"].isInvalid()) {
+void RpcApplication::initRegistrant() {
+    if (config_.isInvalid() || !config_.has("registry") || config_["registry"].isInvalid()) {
         return;
     }
 
-    register_ip_   = config_["register"].valueOf("ip", std::string("127.0.0.1"));
-    register_port_ = static_cast<uint16_t>(config_["register"].valueOf("port", 8888));
+    std::string registry_center_ip   = config_["registry"].valueOf("ip", std::string("127.0.0.1"));
+    uint16_t    registry_center_port = static_cast<uint16_t>(config_["registry"].valueOf("port", 8888));
+
+    registry_center_addr_ = net::InetAddress(registry_center_ip, registry_center_port);
+
+    connect_timeout_    = std::chrono::milliseconds(config_["registry"].valueOf("connect_timeout", 1000));
+    heartbeat_interval_ = std::chrono::milliseconds(config_["registry"].valueOf("heartbeat_interval", 10000));
 }
 
 void RpcApplication::configLogger(std::queue<std::function<void()>>& funcs, const json::JsonNode& node,

@@ -33,7 +33,7 @@ std::string InetAddress::toIpPort() const {
 }
 
 uint16_t InetAddress::port() const {
-    return addr_.sin_port;
+    return common::networkToHost(addr_.sin_port);
 }
 
 const sockaddr* InetAddress::sockAddr() const {

@@ -38,7 +38,7 @@ public:
         const ::fixbug::RegisterRequest*             request,
         ::fixbug::RegisterResponse*                  response,
         ::google::protobuf::Closure*                 done) override {
-        uint32_t id = request->id();
+        uint32_t    id   = request->id();
         std::string name = request->name();
         std::string pwd  = request->pwd();
 
@@ -55,7 +55,7 @@ public:
 int main(int argc, char* argv[]) {
     rpc::RpcApplication::instance().init(argc, argv);
 
-    rpc::RpcProvider provider;
+    rpc::RpcProvider provider(std::chrono::seconds(2));
     provider.publish(new UserService());
 
     provider.run();

@@ -5,8 +5,8 @@
 #include <rpc/rpc_provider.h>
 
 namespace talko::rpc {
-RpcProvider::RpcProvider()
-    : register_(std::chrono::seconds(10)) {
+RpcProvider::RpcProvider(net::Duration enroll_timeout)
+    : enroll_timeout_(enroll_timeout) {
 }
 
 void RpcProvider::publish(ServicePtr service) {
@@ -33,16 +33,6 @@ void RpcProvider::publish(ServicePtr service) {
 }
 
 void RpcProvider::run() {
-    if (!register_.connect()) {
-        LOGGER_ERROR("rpc", "Failed to connect to Register: {}", register_.errorMessage());
-        exit(EXIT_FAILURE);
-    } else {
-        LOGGER_INFO("rpc", "Connection with Register established");
-    }
-
-    LOGGER_INFO("rpc", "addr: {}, ip: {}", RpcApplication::instance().ip(),
-        RpcApplication::instance().port());
-
     // 设置服务器参数
     net::TcpServer server(&loop_, RpcApplication::instance().serverAddress(),
         RpcApplication::instance().serverName(), RpcApplication::instance().reusePort());
@@ -55,9 +45,23 @@ void RpcProvider::run() {
     server.setMessageCallback(std::bind(&RpcProvider::onMessage, this, std::placeholders::_1,
         std::placeholders::_2, std::placeholders::_3));
 
-    LOGGER_INFO("rpc", "{} start at {}", server.name(), server.ipPort());
+    LOGGER_DEBUG("rpc", "Try to enroll all methods");
+
+    // 向注册中心注册当前RPC节点上所有的服务
+    for (auto& [service_name, service_info] : services_) {
+        for (auto& [method_name, _] : service_info.methods) {
+            if (!RpcRegistrant::instance().enrollMethod(service_name, method_name, enroll_timeout_)) {
+                LOGGER_FATAL("rpc", "Failed to enroll [{}]-[{}]: {}", service_name, method_name,
+                    RpcRegistrant::instance().errorMessage());
+            }
+        }
+    }
+
+    LOGGER_INFO("rpc", "Finished to enroll all methods");
 
     server.start();
+    LOGGER_INFO("rpc", "{} start at {}", server.name(), server.ipPort());
+
     loop_.loop();
 }
 

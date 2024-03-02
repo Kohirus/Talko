@@ -39,9 +39,6 @@ TcpClient::~TcpClient() {
         }
     } else {
         connector_->stop();
-        loop_->runAfter(std::chrono::seconds(1), [&]() {
-            connector_.reset();
-        });
     }
 }
 

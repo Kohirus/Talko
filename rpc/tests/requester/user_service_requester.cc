@@ -1,6 +1,6 @@
 #include "user.pb.h"
 #include <rpc/rpc_application.h>
-#include <rpc/rpc_async_channel.h>
+#include <rpc/rpc_channel.h>
 #include <thread>
 using namespace talko;
 
@@ -12,7 +12,7 @@ public:
     }
 
     void Run() override {
-        log::debug("RPC Request is finished");
+        LOG_DEBUG("RPC Request is finished");
         if (controller_->failed()) {
             LOG_ERROR("Failed to execute RPC: {}", controller_->errorMessage());
         } else {
@@ -32,11 +32,7 @@ private:
 int main(int argc, char* argv[]) {
     rpc::RpcApplication::instance().init(argc, argv);
 
-    // 同步请求
-    // fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(5)));
-
-    // 异步请求
-    fixbug::UserServiceRpc_Stub callee(new rpc::RpcAsyncChannel(std::chrono::seconds(5)));
+    fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(2)));
 
     fixbug::LoginRequest request;
     request.set_name("zhang san");
@@ -50,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     callee.Login(&controller, &request, &response, &closure);
 
-    std::this_thread::sleep_for(std::chrono::seconds(30));
+    // std::this_thread::sleep_for(std::chrono::seconds(30));
 
     return 0;
 }

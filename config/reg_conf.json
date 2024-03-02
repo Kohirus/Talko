@@ -3,8 +3,8 @@
         "dynamic_mode": true
     },
     "log": {
-        "level": "info",
-        "formatter": "[%T.%f] [%C] [%l] [%E] %v",
+        "level": "debug",
+        "formatter": "[%T.%f] [%C] [%l] [%E] [%k] %v",
         "logger": [
             {
                 "name": "net",
@@ -17,7 +17,7 @@
         ]
     },
     "network": {
-        "name": "Register",
+        "name": "RegistryCenter",
         "port": 8888
     }
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <net/net.h>
-#include <rpc/rpc_registry.h>
 #include <rpc/rpc_types.h>
 #include <unordered_map>
 
@@ -13,7 +12,7 @@ namespace talko::rpc {
  */
 class RpcProvider {
 public:
-    RpcProvider();
+    RpcProvider(net::Duration enroll_timeout);
     ~RpcProvider() = default;
 
     RpcProvider(const RpcProvider&)            = delete;
@@ -62,6 +61,7 @@ private:
 private:
     net::EventLoop loop_;     ///< 事件循环
     ServiceHash    services_; ///< 服务信息映射表
-    RpcRegistry    register_; ///< 注册器
+
+    net::Duration enroll_timeout_; ///< 注册方法的超时时间
 };
 } // namespace talko::rpc

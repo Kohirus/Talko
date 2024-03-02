@@ -1,2 +1,2 @@
-add_target(registry EXECUTABLE)
-target_link_libraries(registry rpc)
+add_target(registry_center EXECUTABLE)
+target_link_libraries(registry_center rpc)

@@ -5,23 +5,15 @@
 #include <rpc/rpc_types.h>
 
 namespace talko::rpc {
-/**
- * @brief 同步RPC通道
- *
- */
 class RpcChannel : public google::protobuf::RpcChannel {
 public:
-    /**
-     * @brief Construct a new Rpc Channel object
-     *
-     * @param timeout RPC请求的超时时间
-     */
-    RpcChannel(net::Duration timeout);
+    RpcChannel(net::Duration discover_timeout);
     ~RpcChannel() = default;
 
     RpcChannel(const RpcChannel&)            = delete;
     RpcChannel& operator=(const RpcChannel&) = delete;
 
+private:
     /**
      * @brief 调用远程服务的给定方法
      *
@@ -34,25 +26,11 @@ public:
     void CallMethod(MethodDescriptorPtr method, RpcControllerPtr controller,
         ConstMessagePtr request, MessagePtr response, ClosurePtr done) override;
 
-private:
-    /** 连接回调函数 */
-    void onConnection(const net::TcpConnectionPtr& conn);
-
-    /** 消息回调函数 */
-    void onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer* buffer, net::TimePoint time);
-
-    /** 处理RPC请求的超时响应 */
-    void handleTimeout();
+    /** 组织请求内容 */
+    std::string createRequestContent(const std::string& service_name, const std::string& method_name,
+        RpcControllerPtr controller, ConstMessagePtr request);
 
 private:
-    net::EventLoop loop_;   ///< 事件循环
-    net::TcpClient client_; ///< 客户端
-
-    std::string package_; ///< 待发送的RPC内容
-    std::string result_;  ///< 接收的远程RPC调用结果
-
-    net::Duration timeout_; ///< 超时时间
-
-    RpcControllerPtr controller_ { nullptr }; ///< RPC控制器
+    net::Duration discover_timeout_; ///< 发现的超时时间
 };
 } // namespace talko::rpc
