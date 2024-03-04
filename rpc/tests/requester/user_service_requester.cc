@@ -1,6 +1,6 @@
 #include "user.pb.h"
 #include <rpc/rpc_application.h>
-#include <rpc/rpc_channel.h>
+#include <thread>
 using namespace talko;
 
 class ResultClosure : public google::protobuf::Closure {
@@ -46,6 +46,10 @@ int main(int argc, char* argv[]) {
 
         callee.Login(&controller, &request, &response, &closure);
     }
+
+    LOG_INFO("Start to sleep");
+    std::this_thread::sleep_for(std::chrono::seconds(15));
+    LOG_INFO("End to sleep");
 
     {
         fixbug::UserServiceRpc_Stub callee(new rpc::RpcChannel(std::chrono::seconds(2)));

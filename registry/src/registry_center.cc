@@ -33,6 +33,7 @@ void RegistryCenter::onConnection(const net::TcpConnectionPtr& conn) {
             LOG_INFO("Connection with {} destoryed, remove Service[{}]", conn->peerAddress().toIpPort(),
                 conns_[conn].first);
             manager_->removeService(conns_[conn].first); // 从服务映射表中删除当前连接的服务
+            broadcast(conns_[conn].first);               // 广播服务下线的消息
         } else {
             LOG_INFO("Connection with {} destoryed", conn->peerAddress().toIpPort());
         }
@@ -151,8 +152,18 @@ void RegistryCenter::requestSuccess(MessageType type, const net::TcpConnectionPt
     response.set_allocated_instance(instance);
 
     // 向对端发送响应数据
-    std::string result = response.SerializeAsString();
+    std::string result;
+    if (!response.SerializeToString(&result)) {
+        LOG_FATAL("Failed to serialize response data");
+    }
     LOG_DEBUG("Send success response to the {}", conn->peerAddress().toIpPort());
+
+    std::string tmp;
+    for (auto ch : result) {
+        tmp += fmt::format("{:02x}", ch);
+    }
+    LOG_DEBUG("Response data: {}", tmp);
+
     conn->send(result);
 }
 
@@ -164,7 +175,10 @@ void RegistryCenter::requestError(MessageType type, const net::TcpConnectionPtr&
     response.set_err_msg(err_msg);
 
     // 向对端发送响应数据
-    std::string result = response.SerializeAsString();
+    std::string result;
+    if (!response.SerializeToString(&result)) {
+        LOG_FATAL("Failed to serialize response data");
+    }
     LOG_DEBUG("Send error response to the {}", conn->peerAddress().toIpPort());
     conn->send(result);
 }
@@ -176,9 +190,7 @@ void RegistryCenter::connectionAlive(const net::TcpConnectionPtr& conn) {
 
 void RegistryCenter::handleHeartbeatTimeout() {
     if (conns_.empty()) return;
-
-    // std::vector<std::string> death_service;
-    std::vector<net::TcpConnectionPtr> death_service;
+    size_t death_conn_cnt = 0; // 死亡连接的数目
 
     // 遍历服务提供者映射表 找出其中已死亡的连接
     for (auto iter = conns_.begin(); iter != conns_.end(); ++iter) {
@@ -192,26 +204,44 @@ void RegistryCenter::handleHeartbeatTimeout() {
             } else {
                 LOG_DEBUG("Requester from {} is death, remove it", iter->first->peerAddress().toIpPort());
             }
-            death_service.push_back(iter->first);
-            iter->first->disconnected(); // 关闭已死亡的连接
+            ++death_conn_cnt;
+            iter->first->forceClose(); // 关闭已死亡的连接 触发连接回调 广播服务已下线 同时删除死亡连接
         } else {
             // 如果该连接存活 则重置其死亡标志
             alive = false;
         }
     }
 
-    if (death_service.empty()) {
+    if (death_conn_cnt == 0) {
         LOG_DEBUG("No connection dead");
-        return;
+    } else {
+        LOG_DEBUG("The number of dead connection: {}", death_conn_cnt);
+    }
+}
+
+void RegistryCenter::broadcast(const std::string& service_name) {
+    // 组织广播数据
+    ServiceInstance* instance = new ServiceInstance;
+    instance->set_service_name(service_name);
+
+    ServiceResponse response;
+    response.set_msg_type(MessageType::BROADCAST);
+    response.set_success(true);
+    response.set_allocated_instance(instance);
+
+    std::string response_content;
+    if (!response.SerializeToString(&response_content)) {
+        LOG_FATAL("Failed to serialize broadcast data");
     }
 
-    // 通知所有的服务请求者所有已死亡的服务名称
-    // 具体服务请求者是否订阅过该服务则交给服务请求者进行判断
-    // TODO: 通知
-
-    // 从连接映射表中删除死亡连接
-    for (size_t i = 0; i < death_service.size(); ++i) {
-        conns_.erase(death_service[i]);
+    for (auto iter = conns_.begin(); iter != conns_.end(); ++iter) {
+        auto& [name, alive] = iter->second;
+        if (name != service_name) {
+            LOG_DEBUG("Notify {} service named {} is dead", iter->first->peerAddress().toIpPort(), service_name);
+            iter->first->send(response_content);
+        }
     }
+
+    LOG_DEBUG("Boradcast end");
 }
 } // namespace talko::registry

@@ -47,7 +47,7 @@ const InetAddress& TcpConnection::peerAddress() const {
     return peer_addr_;
 }
 
-void TcpConnection::send(std::string_view message) {
+void TcpConnection::send(const std::string& message) {
     if (state_ == State::Connected) {
         if (loop_->isInCreatorThread()) {
             send_(message);
@@ -221,7 +221,7 @@ void TcpConnection::handleError() {
     LOGGER_ERROR("net", "Handle error from {}: {}", name_, std::strerror(err));
 }
 
-void TcpConnection::send_(std::string_view message) {
+void TcpConnection::send_(const std::string& message) {
     loop_->checkIsInCreatorThread();
 
     ssize_t nwrote    = 0;              // 已经写入的字节数目

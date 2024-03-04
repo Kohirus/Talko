@@ -45,7 +45,7 @@ public:
     const InetAddress& peerAddress() const;
 
     /** 向对端发送消息 */
-    void send(std::string_view message);
+    void send(const std::string& message);
 
     /** 将缓冲区中的可读数据发送给对端 */
     void send(ByteBuffer* buffer);
@@ -126,7 +126,7 @@ private:
     void handleError();
 
     /** 向对端发送消息 */
-    void send_(std::string_view message);
+    void send_(const std::string& message);
 
     /** 关闭连接 */
     void shutdown_();

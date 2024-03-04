@@ -92,6 +92,9 @@ private:
     /** 将服务存储到缓存中 */
     void saveServiceInCache(const std::string& service_name, const std::string& method_name, const net::InetAddress& provider_addr);
 
+    /** 从缓存中移除服务 */
+    void removeServiceInCache(const std::string& service_name);
+
 private:
     using MethodMap = std::unordered_set<std::string>;
 

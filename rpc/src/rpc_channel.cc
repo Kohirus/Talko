@@ -19,6 +19,8 @@ void RpcChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr control
     std::string service_name = service->name();
     std::string method_name  = method->name();
 
+    net::TimePoint start_time = std::chrono::high_resolution_clock::now();
+
     net::InetAddress service_addr;
     if (!RpcRegistrant::instance().discoverMethod(service_name, method_name, discover_timeout_, service_addr)) {
         controller->SetFailed(RpcRegistrant::instance().errorMessage());
@@ -27,14 +29,67 @@ void RpcChannel::CallMethod(MethodDescriptorPtr method, RpcControllerPtr control
     }
 
     LOGGER_INFO("rpc", "[{}]-[{}] is located on {}", service_name, method_name, service_addr.toIpPort());
+
+    // 组织请求数据
+    createRequestContent(service_name, method_name, controller, request);
+    if (controller->Failed()) {
+        if (done) done->Run();
+        return;
+    }
+
+    net::TimePoint end_time = std::chrono::high_resolution_clock::now();
+
+    // 计算剩余的超时时间
+    remaining_timeout_ = discover_timeout_ - std::chrono::duration_cast<net::Duration>(end_time - start_time);
+    if (remaining_timeout_.count() <= 0) {
+        controller->SetFailed("CallMethod timeout");
+        if (done) done->Run();
+        return;
+    }
+
+    LOGGER_TRACE("rpc", "Remaining timeout: {}", remaining_timeout_.count());
+
+    net::EventLoop loop;
+    loop_ = &loop;
+    net::TcpClient client(&loop, service_addr, RpcApplication::instance().serverName());
+    client_ = &client;
+
+    client.enableRetry();
+    client.setConnectionCallback(std::bind(&RpcChannel::onConnection, this, std::placeholders::_1));
+    client.setMessageCallback(std::bind(&RpcChannel::onMessage, this, std::placeholders::_1,
+        std::placeholders::_2, std::placeholders::_3));
+
+    // 启动响应定时器 防止超时 其中包含"连接服务提供者"和"接收服务提供者响应"两部分操作
+    // 因此在接收到服务提供者的响应时再取消定时器
+    response_timer_ = loop.runAfter(remaining_timeout_, std::bind(&RpcChannel::connectTimeout, this));
+
+    client.connect();
+    loop.loop();
+
+    loop_   = nullptr;
+    client_ = nullptr;
+
+    if (is_timeout_) {
+        controller->SetFailed("Response timeout");
+    } else {
+        // 解析响应数据
+        if (!response->ParseFromString(buffer_)) {
+            controller->SetFailed("Failed to parse response data form RpcProvider");
+        }
+        LOGGER_INFO("rpc", "Parse response data successfully");
+    }
+
+    if (done) done->Run();
 }
 
-std::string RpcChannel::createRequestContent(const std::string& service_name, const std::string& method_name, RpcControllerPtr controller, ConstMessagePtr request) {
+void RpcChannel::createRequestContent(const std::string& service_name, const std::string& method_name, RpcControllerPtr controller, ConstMessagePtr request) {
+    buffer_.clear();
+
     // 序列化RPC请求参数
     std::string args_content;
     if (!request->SerializeToString(&args_content)) {
         controller->SetFailed("Failed to serialize request");
-        return "";
+        return;
     } else {
         LOGGER_TRACE("rpc", "Request serialization is complete");
     }
@@ -52,7 +107,7 @@ std::string RpcChannel::createRequestContent(const std::string& service_name, co
     std::string header_content;
     if (!rpc_header.SerializeToString(&header_content)) {
         controller->SetFailed("Failed to serialize RpcHeader");
-        return "";
+        return;
     } else {
         LOGGER_TRACE("rpc", "RpcHeader serialization is complete");
     }
@@ -64,14 +119,38 @@ std::string RpcChannel::createRequestContent(const std::string& service_name, co
     // -----------------------------------------------------------------------------------------------
     // | Header Content Size(4) | Header Content(Service Name,Method Name,Args Size) | Request Args |
     // -----------------------------------------------------------------------------------------------
-    std::string content;
-    content.append(std::string(reinterpret_cast<const char*>(&header_size), 4));
-    content.append(header_content);
-    content.append(args_content);
+    buffer_.append(std::string(reinterpret_cast<const char*>(&header_size), 4));
+    buffer_.append(header_content);
+    buffer_.append(args_content);
 
     LOGGER_TRACE("rpc", "Packaged RpcHeader: HeaderSize[{}] HeaderContent[{}] ServiceName[{}] MethodName[{}] ArgsSize[{}] Args[{}]",
         header_size, header_content, service_name, method_name, args_size, args_content);
+}
 
-    return content;
+void RpcChannel::onConnection(const net::TcpConnectionPtr& conn) {
+    if (conn->connected()) {
+        LOGGER_DEBUG("rpc", "Connect with RpcProvider[{}]", conn->peerAddress().toIpPort());
+        conn->send(buffer_); // 发送请求内容
+    } else {
+        LOGGER_DEBUG("rpc", "Disconnect with RpcProvider[{}]", conn->peerAddress().toIpPort());
+        conn->loop()->quit();
+    }
+}
+
+void RpcChannel::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer* buffer, net::TimePoint time) {
+    LOGGER_INFO("rpc", "Receive response data from RpcProvider[{}]", conn->peerAddress().toIpPort());
+    conn->loop()->cancel(response_timer_); // 取消定时器
+    buffer_.clear();
+    buffer->readBytes(buffer_);
+    assert(client_);
+    client_->disconnect(); // 断开与服务提供者的连接
+}
+
+void RpcChannel::connectTimeout() {
+    LOGGER_ERROR("rpc", "Response timeout");
+    is_timeout_ = true;
+    assert(client_ && loop_);
+    client_->disconnect();
+    loop_->quit();
 }
 } // namespace talko::rpc

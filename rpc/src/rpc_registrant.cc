@@ -190,6 +190,7 @@ void RpcRegistrant::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer
     // 反序列化响应数据
     registry::ServiceResponse response;
     if (!response.ParseFromString(message)) {
+        LOGGER_ERROR("rpc", "Failed to parse response form RegistryCenter");
         setErrorMessage("Failed to parse response from RegistryCenter");
         response_finished_ = true;
         response_success_  = false;
@@ -200,16 +201,30 @@ void RpcRegistrant::onMessage(const net::TcpConnectionPtr& conn, net::ByteBuffer
     registry::MessageType type = response.msg_type();
 
     if (!response.success()) { // 响应失败
+        LOGGER_ERROR("rpc", "Response has fault");
         setErrorMessage(response.err_msg());
         response_success_ = false;
     } else { // 响应成功
-        // 如果响应类型为发现服务则需要写入RPC服务地址
-        // 同时将其存入缓存
-        if (type == registry::MessageType::DISCOVER) {
+        LOGGER_TRACE("rpc", "Response is success");
+        switch (type) {
+        case registry::MessageType::DISCOVER: {
+            // 如果响应类型为发现服务则需要写入RPC服务地址 同时将其存入缓存
             assert(response.has_instance());
             std::string ip   = response.instance().address();
             uint16_t    port = response.instance().port();
-            service_addr_    = net::InetAddress(ip, port);
+            LOGGER_DEBUG("rpc", "Response type is DISCOVER, ip is {}, port is {}", ip, port);
+            service_addr_ = net::InetAddress(ip, port);
+        } break;
+        case registry::MessageType::BROADCAST: {
+            // 如果响应类型为广播服务 则查询当前缓存中是否存在该服务 存在则删除
+            assert(response.has_instance());
+            std::string service_name = response.instance().service_name();
+            LOGGER_DEBUG("rpc", "Response type is BROADCAST, service named {} is death", service_name);
+            removeServiceInCache(service_name);
+        } break;
+        default:
+            LOGGER_TRACE("rpc", "Receive other type response");
+            break;
         }
 
         resetErrorMessage();
@@ -240,7 +255,10 @@ void RpcRegistrant::heartbeat(const net::TcpConnectionPtr& conn) {
 
     LOGGER_TRACE("rpc", "Send heartbeat data to RegistryCenter");
 
-    std::string res = request.SerializeAsString();
+    std::string res;
+    if (!request.SerializeToString(&res)) {
+        LOGGER_FATAL("rpc", "Failed to serialize heartbeat data");
+    }
     conn->send(res);
 }
 
@@ -260,7 +278,10 @@ void RpcRegistrant::enrollMethod_(const std::string& service_name, const std::st
     request.set_allocated_instance(instance);
 
     // 序列化请求数据并向对端发送
-    std::string result = request.SerializeAsString();
+    std::string result;
+    if (!request.SerializeToString(&result)) {
+        LOGGER_FATAL("rpc", "Failed to serialize enroll request");
+    }
     LOGGER_TRACE("rpc", "Send enroll request to the RegistryCenter");
     conn_->send(result);
 }
@@ -279,7 +300,10 @@ void RpcRegistrant::discoverMethod_(const std::string& service_name, const std::
     request.set_allocated_instance(instance);
 
     // 序列化请求数据并向对端发送
-    std::string result = request.SerializeAsString();
+    std::string result;
+    if (!request.SerializeToString(&result)) {
+        LOGGER_FATAL("rpc", "Failed to serialize discover request");
+    }
     LOGGER_TRACE("rpc", "Send discover request to the RegistryCenter");
     conn_->send(result);
 }
@@ -308,5 +332,15 @@ void RpcRegistrant::saveServiceInCache(const std::string& service_name, const st
 
     std::unique_lock<std::shared_mutex> lock(services_mtx_);
     services_.insert({ service_name, info });
+}
+
+void RpcRegistrant::removeServiceInCache(const std::string& service_name) {
+    std::unique_lock<std::shared_mutex> lock(services_mtx_);
+
+    auto iter = services_.find(service_name);
+    if (iter != services_.end()) {
+        LOGGER_DEBUG("rpc", "Service named {} is found in the cache, remove it", service_name);
+        services_.erase(iter);
+    }
 }
 } // namespace talko::rpc

@@ -64,16 +64,17 @@ private:
     /** 处理心跳超时 */
     void handleHeartbeatTimeout();
 
+    /** 广播消息 */
+    void broadcast(const std::string& service_name);
+
 private:
     using ConnectionInfo    = std::pair<std::string, bool>;
     using ServiceManagerPtr = std::unique_ptr<ServiceManager>;
     using ConnectionMap     = std::unordered_map<net::TcpConnectionPtr, ConnectionInfo>;
-    // using RequesterMap      = std::set<net::TcpConnectionPtr>;
 
     net::TcpServer    server_;  ///< 服务器
     ServiceManagerPtr manager_; ///< 服务管理者
     ConnectionMap     conns_;   ///< 管理所有的连接
-    // RequesterMap      requester_; ///< 管理所有的服务请求者
 
     net::Duration heartbeat_timeout_; ///< 心跳检测的超时时间
 };
