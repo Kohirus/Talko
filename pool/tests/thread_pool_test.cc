@@ -14,11 +14,11 @@ ullong sum(ullong begin, ullong end) {
 }
 
 int main() {
-    tp::ThreadPool::instance().start();
+    pool::ThreadPool::instance().start();
 
-    auto r1 = tp::submitTask(sum, 1, 100000000);
-    auto r2 = tp::submitTask(sum, 100000001, 200000000);
-    auto r3 = tp::submitTask(sum, 200000001, 300000000);
+    auto r1 = pool::submitTask(sum, 1, 100000000);
+    auto r2 = pool::submitTask(sum, 100000001, 200000000);
+    auto r3 = pool::submitTask(sum, 200000001, 300000000);
 
     ullong a = r1.get();
     ullong b = r2.get();

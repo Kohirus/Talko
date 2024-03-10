@@ -6,7 +6,7 @@ project(Talko LANGUAGES CXX)
 
 include(add_target)
 
-if (NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
@@ -16,7 +16,7 @@ find_package(Protobuf REQUIRED)
 option(ENABLE_UNIT_TESTS "Enable unit tests" ON)
 message(STATUS "Enable testing: ${ENABLE_UNIT_TESTS}")
 
-if (ENABLE_UNIT_TESTS)
+if(ENABLE_UNIT_TESTS)
     find_package(GTest REQUIRED)
     enable_testing()
 endif()
@@ -31,11 +31,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fPIC")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-add_subdirectory(utils)
-add_subdirectory(pool)
-add_subdirectory(log)
-add_subdirectory(json)
-add_subdirectory(net)
-add_subdirectory(rpc)
+# 库模块
+add_subdirectory(utils) # 通用库
+add_subdirectory(pool) # 池式组件
+add_subdirectory(log) # 日志库
+add_subdirectory(json) # JSON解析库
+add_subdirectory(net) # Reactor网络库
+add_subdirectory(rpc) # RPC库
 
-add_subdirectory(registry)
+# 可执行文件
+add_subdirectory(registry) # 注册中心
+# add_subdirectory(db_proxy_server) # 数据库代理服务器

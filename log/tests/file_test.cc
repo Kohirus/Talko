@@ -38,8 +38,8 @@ void singleThreadTest(bool rewrite) {
 }
 
 void multiThreadSyncTest(bool rewrite, size_t log_num, size_t thread_num) {
-    tp::setThreadPoolMode(tp::ThreadPoolMode::dynamic);
-    tp::start();
+    pool::setThreadPoolMode(pool::ThreadPoolMode::dynamic);
+    pool::startThreadPool();
 
     auto logger = log::createFileLoggerMt("filelog", "./log/log.txt", rewrite, true);
     log::setDefaultLogger(logger);

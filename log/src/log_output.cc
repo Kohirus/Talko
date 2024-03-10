@@ -18,7 +18,7 @@ LogOutput::LogOutput(FILE* handler, bool async)
 LogOutput::~LogOutput() {
     if (is_async_) {
         // 异步输出时确保对象销毁前 输入缓冲区中的余留日志也完成输出任务
-        auto res = tp::submitTask(outputBuffer, handler_, input_buf_);
+        auto res = pool::submitTask(outputBuffer, handler_, input_buf_);
         res.get(); // 阻塞等待输出完成
     }
 }
@@ -74,14 +74,14 @@ void LogOutput::sync(std::string_view contnet) {
 }
 
 void LogOutput::async(std::string_view content) {
-    assert(tp::isRunning() && "Thread pool is not running.");
+    assert(pool::isThreadPoolRunning() && "Thread pool is not running.");
 
     if (input_buf_.size() + content.size() > max_buffer_size_) {
         if (res_.valid())
             res_.get(); // 等待输出缓冲区输出完成
         output_buf_ = std::move(input_buf_);
 
-        res_ = tp::submitTask(outputBuffer, handler_, output_buf_);
+        res_ = pool::submitTask(outputBuffer, handler_, output_buf_);
     }
 
     input_buf_.append(content);

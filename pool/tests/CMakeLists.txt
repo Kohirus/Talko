@@ -1,2 +1,5 @@
 add_executable(thread_pool_test thread_pool_test.cc)
 target_link_libraries(thread_pool_test pool)
+
+add_executable(sql_pool_test sql_pool_test.cc)
+target_link_libraries(sql_pool_test pool)

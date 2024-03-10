@@ -32,8 +32,8 @@ int main() {
     // log::defaultLogger()->setLevel(log::LogLevel::trace);
     // log::defaultLogger()->setPattern("[%T.%f] [%C] [%l] [%E] [%k] %v");
 
-    tp::setThreadPoolMode(tp::ThreadPoolMode::dynamic);
-    tp::start();
+    pool::setThreadPoolMode(pool::ThreadPoolMode::dynamic);
+    pool::startThreadPool();
 
     net::EventLoop   loop;
     net::InetAddress listen_addr(8888);

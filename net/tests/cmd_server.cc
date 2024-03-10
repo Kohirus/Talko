@@ -83,8 +83,8 @@ int main() {
     logger->setLevel(log::LogLevel::debug);
     log::registerLogger(logger);
 
-    tp::setThreadPoolMode(tp::ThreadPoolMode::dynamic);
-    tp::start();
+    pool::setThreadPoolMode(pool::ThreadPoolMode::dynamic);
+    pool::startThreadPool();
 
     net::EventLoop loop;
 

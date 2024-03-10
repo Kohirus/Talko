@@ -50,9 +50,9 @@ void TcpServer::start() {
         started_ = true;
 
         // 提交线程池任务
-        assert(tp::isRunning() && "Thread pool is not started");
+        assert(pool::isThreadPoolRunning() && "Thread pool is not started");
         for (size_t i = 0; i < sub_loop_size_; ++i) {
-            tp::submitTask(std::bind(&TcpServer::startSubEventLoop, this));
+            pool::submitTask(std::bind(&TcpServer::startSubEventLoop, this));
         }
 
         assert(!acceptor_->listening());
@@ -62,8 +62,8 @@ void TcpServer::start() {
 
 void TcpServer::setSubLoopSize(size_t size) {
     assert(!started_);
-    if (tp::mode() == tp::ThreadPoolMode::fixed) {
-        assert(tp::idleThreadSize() >= size && "Size of subloop is less than thread num of thread pool");
+    if (pool::threadPoolMode() == pool::ThreadPoolMode::fixed) {
+        assert(pool::idleThreadSize() >= size && "Size of subloop is less than thread num of thread pool");
     }
     sub_loop_size_ = size;
 }

@@ -9,7 +9,7 @@
 #include <queue>
 #include <unordered_map>
 
-namespace talko::tp {
+namespace talko::pool {
 enum class ThreadPoolMode {
     fixed,  ///< 固定数量
     dynamic ///< 动态数量
@@ -130,19 +130,19 @@ void setMaxThreadSize(size_t max_size);
 void setMaxTaskSize(size_t max_size);
 
 /** 启动线程池 */
-void start(size_t thread_num = std::thread::hardware_concurrency());
+void startThreadPool(size_t thread_num = std::thread::hardware_concurrency());
 
 /** 停止线程池 */
-void stop();
+void stopThreadPool();
 
 /** 获取空闲线程数量 */
 size_t idleThreadSize();
 
 /** 获取当前的线程池模式 */
-ThreadPoolMode mode();
+ThreadPoolMode threadPoolMode();
 
 /** 线程池是否正在运行 */
-bool isRunning();
+bool isThreadPoolRunning();
 
 /**
  * @brief 向线程池提交任务
@@ -157,4 +157,4 @@ template <typename TaskFunc, typename... Args>
 auto submitTask(TaskFunc&& func, Args&&... args) -> std::future<decltype(func(args...))> {
     return ThreadPool::instance().submitTask(std::forward<TaskFunc>(func), std::forward<Args>(args)...);
 }
-} // namespace talko::tp
+} // namespace talko::pool

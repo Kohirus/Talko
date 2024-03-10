@@ -55,6 +55,9 @@ private:
     /** 网络初始化 */
     void initNetwork();
 
+    /** 连接池初始化 */
+    void initConnectionPool();
+
     /** 注册中心客户端初始化 */
     void initRegistrant();
 

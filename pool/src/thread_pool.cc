@@ -1,10 +1,12 @@
 #include <pool/thread_pool.h>
 
-namespace talko::tp {
+namespace talko::pool {
 size_t ThreadPool::generated_id_ { 0 };
 
 ThreadPool::~ThreadPool() {
-    stop();
+    if (running_) {
+        stop();
+    }
 }
 
 ThreadPool& ThreadPool::instance() {
@@ -168,11 +170,11 @@ void setMaxThreadSize(size_t max_size) {
     ThreadPool::instance().setMaxThreadSize(max_size);
 }
 
-void start(size_t thread_num) {
+void startThreadPool(size_t thread_num) {
     ThreadPool::instance().start(thread_num);
 }
 
-void stop() {
+void stopThreadPool() {
     ThreadPool::instance().stop();
 }
 
@@ -180,11 +182,11 @@ size_t idleThreadSize() {
     return ThreadPool::instance().idleThreadSize();
 }
 
-ThreadPoolMode mode() {
+ThreadPoolMode threadPoolMode() {
     return ThreadPool::instance().mode();
 }
 
-bool isRunning() {
+bool isThreadPoolRunning() {
     return ThreadPool::instance().isRunning();
 }
-} // namespace talko::tp
+} // namespace talko::pool

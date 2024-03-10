@@ -1,3 +1,5 @@
+#include "pool/connection_info.h"
+#include "pool/connection_pool.h"
 #include <rpc/rpc_application.h>
 
 namespace talko::rpc {
@@ -21,6 +23,7 @@ void RpcApplication::init(int argc, char** argv, bool is_registry) {
     initThreadPool();
     initLog();
     initNetwork();
+    initConnectionPool();
     if (!is_registry) {
         initRegistrant();
     }
@@ -41,27 +44,27 @@ void RpcApplication::initThreadPool() {
     if (!config_.isInvalid() && config_.has("thread")) {
         // 设置线程池参数
         if (config_["thread"].has("max_thread_num")) {
-            tp::setMaxThreadSize(config_["thread"]["max_thread_num"].value<int>());
+            pool::setMaxThreadSize(config_["thread"]["max_thread_num"].value<int>());
         }
         if (config_["thread"].has("max_task_num")) {
-            tp::setMaxTaskSize(config_["thread"]["max_task_num"].value<int>());
+            pool::setMaxTaskSize(config_["thread"]["max_task_num"].value<int>());
         }
         if (config_["thread"].has("dynamic_mode")) {
             if (config_["thread"]["dynamic_mode"].value<bool>()) {
-                tp::setThreadPoolMode(tp::ThreadPoolMode::dynamic);
+                pool::setThreadPoolMode(pool::ThreadPoolMode::dynamic);
             } else {
-                tp::setThreadPoolMode(tp::ThreadPoolMode::fixed);
+                pool::setThreadPoolMode(pool::ThreadPoolMode::fixed);
             }
         }
 
         // 启动线程池
         if (config_["thread"].has("init_thread_num")) {
-            tp::start(config_["thread"]["init_thread_num"].value<int>());
+            pool::startThreadPool(config_["thread"]["init_thread_num"].value<int>());
         } else {
-            tp::start();
+            pool::startThreadPool();
         }
     } else {
-        tp::start();
+        pool::startThreadPool();
     }
 }
 
@@ -124,6 +127,96 @@ void RpcApplication::initNetwork() {
     reuse_port_    = config_["network"].valueOf("reuse_port", false);
     loopback_only_ = config_["network"].valueOf("loopback_only", false);
     subloop_num_   = static_cast<size_t>(config_["network"].valueOf("subloop_num", 3));
+}
+
+void RpcApplication::initConnectionPool() {
+    if (config_.isInvalid() || !config_.has("database")) {
+        return;
+    }
+
+    if (config_["database"].isInvalid()) {
+        std::cerr << "[database] in the config file can't be nil";
+        exit(EXIT_FAILURE);
+    }
+
+    if (!config_["database"].has("mysql") || config_["database"]["mysql"].isInvalid()) {
+        std::cerr << "[mysql] in [database] can't be nil";
+        exit(EXIT_FAILURE);
+    }
+
+    if (!config_["database"]["mysql"].has("password") || config_["database"]["mysql"]["password"].value<std::string>().empty()) {
+        std::cerr << "[password] in [mysql] can't be nil";
+        exit(EXIT_FAILURE);
+    }
+
+    if (!config_["database"]["mysql"].has("database") || config_["database"]["mysql"]["database"].value<std::string>().empty()) {
+        std::cerr << "[database] in [mysql] can't be nil";
+        exit(EXIT_FAILURE);
+    }
+
+    pool::ConnectionInfo mysql_info, redis_info;
+    pool::DatabaseInfo   mysql_dt, redis_dt;
+    redis_dt.port = 6379;
+
+    // 读取mysql库信息
+    mysql_dt.port        = config_["database"]["mysql"].valueOf("port", 3306);
+    mysql_dt.database    = config_["database"]["mysql"]["database"].value<std::string>();
+    mysql_dt.ip          = config_["database"]["mysql"].valueOf("ip", std::string("127.0.0.1"));
+    mysql_dt.password    = config_["database"]["mysql"]["password"].value<std::string>();
+    mysql_dt.username    = config_["database"]["mysql"].valueOf("username", std::string("root"));
+    mysql_info.init_size = config_["database"]["mysql"].valueOf("init_size", 3);
+    mysql_info.max_size  = config_["database"]["mysql"].valueOf("max_size", 20);
+    mysql_info.database  = mysql_dt;
+
+    if (mysql_info.database.username.empty()) {
+        std::cerr << "[username] of [mysql] can't be empty";
+        exit(EXIT_FAILURE);
+    }
+
+    // 读取redis库信息
+    if (config_["database"].has("redis")) {
+        redis_dt.port        = config_["database"]["redis"].valueOf("port", 6379);
+        redis_dt.ip          = config_["database"]["redis"].valueOf("ip", std::string("127.0.0.1"));
+        redis_dt.username    = config_["database"]["redis"].valueOf("username", std::string("root"));
+        redis_info.init_size = config_["database"]["redis"].valueOf("init_size", 3);
+        redis_info.max_size  = config_["database"]["redis"].valueOf("max_size", 20);
+        redis_info.database  = redis_dt;
+    }
+
+    if (redis_info.database.username.empty()) {
+        std::cerr << "[username] of [mysql] can't be empty";
+        exit(EXIT_FAILURE);
+    }
+
+    // 读取最大空闲时间和连接超时时间
+    auto max_idle_interval       = std::chrono::milliseconds(config_["database"].valueOf("max_idle_interval", 50000));
+    auto connect_timeout         = std::chrono::milliseconds(config_["database"].valueOf("connect_timeout", 1000));
+    mysql_info.max_idle_interval = max_idle_interval;
+    redis_info.max_idle_interval = max_idle_interval;
+    mysql_info.connect_timeout   = connect_timeout;
+    redis_info.connect_timeout   = connect_timeout;
+
+    std::cout << "========================" << std::endl;
+    std::cout << "MySQL Configuration:" << std::endl;
+    std::cout << "- Port: " << mysql_info.database.port << std::endl;
+    std::cout << "- IP: " << mysql_info.database.ip << std::endl;
+    std::cout << "- Username: " << mysql_info.database.username << std::endl;
+    std::cout << "- Password: " << mysql_info.database.password << std::endl;
+    std::cout << "- Database: " << mysql_info.database.database << std::endl;
+    std::cout << "- InitSize: " << mysql_info.init_size << std::endl;
+    std::cout << "- MaxSize: " << mysql_info.max_size << std::endl;
+    std::cout << "- ConnectTimeout: " << mysql_info.connect_timeout.count() << std::endl;
+    std::cout << "- IdleInterval: " << mysql_info.max_idle_interval.count() << std::endl;
+    std::cout << "========================" << std::endl;
+    std::cout << "Redis Configuration:" << std::endl;
+    std::cout << "- Port: " << redis_info.database.port << std::endl;
+    std::cout << "- IP: " << redis_info.database.ip << std::endl;
+    std::cout << "- InitSize: " << redis_info.init_size << std::endl;
+    std::cout << "- MaxSize: " << redis_info.max_size << std::endl;
+    std::cout << "- ConnectTimeout: " << redis_info.connect_timeout.count() << std::endl;
+    std::cout << "- IdleInterval: " << redis_info.max_idle_interval.count() << std::endl;
+
+    pool::startConnectionPool(mysql_info, redis_info);
 }
 
 void RpcApplication::initRegistrant() {

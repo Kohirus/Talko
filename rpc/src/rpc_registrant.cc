@@ -25,12 +25,12 @@ bool RpcRegistrant::connect(net::Duration connect_timeout, net::Duration heartbe
     heartbeat_interval_ = heartbeat_interval;
     registry_addr_      = server_addr;
 
-    assert(tp::isRunning() && "Thread Pool is stop");
+    assert(pool::isThreadPoolRunning() && "Thread Pool is stop");
 
     // 防止多次启动
     if (connected_) return true;
 
-    task_ret_ = tp::submitTask(std::bind(&RpcRegistrant::connect_, this));
+    task_ret_ = pool::submitTask(std::bind(&RpcRegistrant::connect_, this));
 
     std::unique_lock<std::mutex> lock(mtx_);
 

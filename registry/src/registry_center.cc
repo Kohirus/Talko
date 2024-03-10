@@ -157,13 +157,6 @@ void RegistryCenter::requestSuccess(MessageType type, const net::TcpConnectionPt
         LOG_FATAL("Failed to serialize response data");
     }
     LOG_DEBUG("Send success response to the {}", conn->peerAddress().toIpPort());
-
-    std::string tmp;
-    for (auto ch : result) {
-        tmp += fmt::format("{:02x}", ch);
-    }
-    LOG_DEBUG("Response data: {}", tmp);
-
     conn->send(result);
 }
 

@@ -1,0 +1,33 @@
+{
+    "thread": {
+        "dynamic_mode": true
+    },
+    "log": {
+        "level": "info",
+        "formatter": "[%T.%f] [%C] [%l] [%E] %v",
+        "logger": [
+            {
+                "name": "net",
+                "level": "info"
+            },
+            {
+                "name": "rpc",
+                "level": "info"
+            }
+        ]
+    },
+    "network": {
+        "name": "DBProxy",
+        "port": 8000
+    },
+    "registry": {
+        "ip": "127.0.0.1",
+        "port": 8888
+    },
+    "database": {
+        "mysql": {
+            "password": "likehan",
+            "database": "test"
+        }
+    }
+}
