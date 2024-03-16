@@ -238,3 +238,51 @@
 | max_size  | Number  | 20          | 连接的最大数量 |
 | port      | Number  | 6379        | Redis服务器端口号 |
 | ip        | String  | "127.0.0.1" | Redis服务器IP地址 |
+
+# 架构设计
+
+## 动态库依赖层级
+
+<div align="center">
+<img src="./images/dependency_level.png" width="60%" height="60%"/>
+</div>
+
+## 模块图示
+
+### 线程池模块
+
+<div align="center">
+<img src="./images/thread_pool.png" width="60%" height="60%"/>
+</div>
+
+### 连接池模块
+
+<div align="center">
+<img src="./images/connection_pool.png" width="40%" height="40%"/>
+</div>
+
+### 日志模块
+
+<div align="center">
+<img src="./images/logger.png" width="80%" height="80%"/>
+</div>
+
+### JSON解析模式
+
+<div align="center">
+<img src="./images/json_parse.png" width="80%" height="80%"/>
+</div>
+
+### Reactor网络模块
+
+### RPC模块
+
+<div align="center">
+<img src="./images/rpc.png" width="90%" height="90%"/>
+</div>
+
+### 注册中心
+
+<div align="center">
+<img src="./images/registry_center.png" width="50%" height="50%"/>
+</div>
