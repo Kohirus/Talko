@@ -89,7 +89,7 @@ void ThreadPool::handleTaskQueue(size_t thread_id) {
                         == cond_non_empty_.wait_for(lock, std::chrono::seconds(1))) {
                         auto now = std::chrono::high_resolution_clock().now();
                         auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - last_time);
-                        if (dur.count() >= 5 && threads_.size() > init_thread_size_) {
+                        if (dur.count() >= 60 && threads_.size() > init_thread_size_) {
                             // 回收当前线程
                             threads_.erase(thread_id);
                             --idle_thread_size_;

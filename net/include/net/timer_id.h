@@ -17,12 +17,9 @@ public:
     /**
      * @brief Construct a new Timer Id object
      *
-     * @param timer 定时器对象
+     * @param expiration 超时时间点
      * @param seq 定时器序号
      */
-    // TimerId(Timer* timer, int64_t seq)
-    //     : timer_(timer)
-    //     , sequence_(seq) { }
     TimerId(TimePoint expiration, uint64_t seq)
         : expiration_(expiration)
         , sequence_(seq) { }
@@ -42,7 +39,6 @@ public:
     friend class TimerQueue;
 
 private:
-    // Timer*  timer_ { nullptr }; ///< 所绑定的定时器
     TimePoint expiration_;     ///< 超时时间点
     uint64_t  sequence_ { 0 }; ///< 定时器序号
 };

@@ -63,7 +63,7 @@ void TcpServer::start() {
 void TcpServer::setSubLoopSize(size_t size) {
     assert(!started_);
     if (pool::threadPoolMode() == pool::ThreadPoolMode::fixed) {
-        assert(pool::idleThreadSize() >= size && "Size of subloop is less than thread num of thread pool");
+        assert(pool::idleThreadSize() >= size && "Size of subloop is greater than thread num of thread pool");
     }
     sub_loop_size_ = size;
 }

@@ -12,6 +12,11 @@ namespace talko::rpc {
  */
 class RpcProvider {
 public:
+    /**
+     * @brief Construct a new Rpc Provider object
+     * 
+     * @param enroll_timeout 注册方法的超时时间
+     */
     RpcProvider(net::Duration enroll_timeout);
     ~RpcProvider() = default;
 
